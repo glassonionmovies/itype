@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "typing-adventure"
+version = "1.0.0"
+description = "A keyboard learning game for kids, with per-key lighting on Logitech keyboards."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Typing Adventure" }]
+keywords = ["typing", "kids", "education", "keyboard", "rgb", "logitech"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: MacOS X",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Topic :: Education",
+]
+
+dependencies = [
+    "PySide6>=6.6",
+    "hidapi>=0.14",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pyinstaller>=6.3"]
+
+[project.scripts]
+typing-adventure = "app.main:main"
+
+[project.gui-scripts]
+typing-adventure-gui = "app.main:main"
+
+[tool.setuptools]
+packages = [
+    "app",
+    "app.ui",
+    "app.game",
+    "app.keyboard",
+    "app.audio",
+    "app.data",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 96
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+ignore = ["E501"]

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Reference Info.plist for the packaged app.
+
+  PyInstaller generates its own from the `info_plist` block in
+  TypingAdventure.spec; this file documents the same keys for anyone building
+  the bundle another way (py2app, a hand-assembled .app, or an Xcode wrapper).
+-->
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Typing Adventure</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>Typing Adventure</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>com.typingadventure.app</string>
+
+    <key>CFBundleExecutable</key>
+    <string>Typing Adventure</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+
+    <key>CFBundleIconFile</key>
+    <string>icon.icns</string>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>11.0</string>
+
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.educational-games</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <key>NSHumanReadableCopyright</key>
+    <string>Local-only. No accounts, no network, no telemetry.</string>
+
+    <!--
+      The game owns keyboard focus in its own window and reads ordinary Qt key
+      events, so Input Monitoring permission is NOT required. Per-key lighting
+      talks to the keyboard's vendor HID collection, which macOS does not gate
+      behind a usage-description prompt.
+    -->
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Typing Adventure does not send Apple Events.</string>
+</dict>
+</plist>
