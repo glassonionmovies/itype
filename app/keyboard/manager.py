@@ -105,6 +105,8 @@ class LightingManager:
         self._color: RGB = TARGET_COLOR
         self._brightness = 1.0
         self._emphasis_until = 0.0
+        self._static_fill: RGB | None = None
+        self._force_update = False
         self._registered_atexit = False
 
     # -- setup -------------------------------------------------------------
@@ -183,7 +185,8 @@ class LightingManager:
                 return
             self._target = key
             self._emphasis_until = 0.0
-        self._paint(1.0 if key else 0.0)
+            self._static_fill = None
+            self._force_update = True
 
     def emphasise(self, seconds: float = 1.2) -> None:
         """Briefly make the target more prominent.
@@ -199,22 +202,14 @@ class LightingManager:
         """Flood the keyboard for a completed sentence."""
         with self._lock:
             self._target = None
-            backend = self._backend
-        try:
-            backend.set_all(color)
-            backend.flush()
-        except Exception as exc:
-            log.info("celebrate failed: %s", exc)
+            self._static_fill = color
+            self._force_update = True
 
     def blackout(self) -> None:
         with self._lock:
             self._target = None
-            backend = self._backend
-        try:
-            backend.set_all(DIM_COLOR)
-            backend.flush()
-        except Exception as exc:
-            log.info("blackout failed: %s", exc)
+            self._static_fill = DIM_COLOR
+            self._force_update = True
 
     # -- animation ---------------------------------------------------------
 
@@ -226,21 +221,34 @@ class LightingManager:
         write rather than thirty per second.
         """
         last_level = -1.0
+        last_target = None
+        last_fill = None
         while not self._stop.wait(TICK_S):
             with self._lock:
                 target = self._target
                 mode = self._mode
                 emphasis = time.monotonic() < self._emphasis_until
+                static_fill = self._static_fill
+                force = self._force_update
+                self._force_update = False
+                
             if target is None:
-                if last_level != 0.0:
-                    last_level = 0.0
+                if static_fill is not None and (force or static_fill != last_fill):
+                    try:
+                        self._backend.set_all(static_fill)
+                        self._backend.flush()
+                        last_fill = static_fill
+                    except Exception as exc:
+                        log.debug("static fill failed: %s", exc)
                 continue
 
             level = self._level_for(mode, emphasis)
             # Quantise so tiny float wobble does not spam the device.
-            if abs(level - last_level) < 0.02:
+            if not force and target == last_target and abs(level - last_level) < 0.02:
                 continue
             last_level = level
+            last_target = target
+            last_fill = None
             self._paint(level)
 
     def _level_for(self, mode: HighlightMode, emphasis: bool) -> float:
