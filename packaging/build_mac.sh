@@ -64,7 +64,7 @@ source "$VENV/bin/activate"
 info "Installing dependencies"
 python -m pip install --quiet --upgrade pip
 python -m pip install --quiet -r requirements.txt
-python -m pip install --quiet pyinstaller
+python -m pip install --quiet pyinstaller pytest
 
 # -- clean -----------------------------------------------------------------
 

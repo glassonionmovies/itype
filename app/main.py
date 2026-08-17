@@ -11,11 +11,11 @@ import logging
 import signal
 import sys
 
-from . import APP_NAME, __version__
-from .config import Settings
-from .data.database import Database
-from .keyboard.manager import LightingManager
-from .paths import log_path
+from app import APP_NAME, __version__
+from app.config import Settings
+from app.data.database import Database
+from app.keyboard.manager import LightingManager
+from app.paths import log_path
 
 
 def configure_logging(verbose: bool = False) -> None:
@@ -79,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    from .ui.main_window import MainWindow, apply_theme
+    from app.ui.main_window import MainWindow, apply_theme
 
     settings = Settings.load()
     database = Database()
