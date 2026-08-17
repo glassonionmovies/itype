@@ -108,6 +108,7 @@ class LightingManager:
         self._static_fill: RGB | None = None
         self._force_update = False
         self._registered_atexit = False
+        self._bg_color: RGB = (0, 0, 0)
 
     # -- setup -------------------------------------------------------------
 
@@ -171,6 +172,12 @@ class LightingManager:
         with self._lock:
             self._color = color
 
+    def set_background_color(self, color: RGB) -> None:
+        with self._lock:
+            self._bg_color = color
+            if self._backend:
+                self._backend.set_background(color)
+
     def set_brightness(self, scale: float) -> None:
         """Scale target brightness, for the 'soft' highlight setting."""
         with self._lock:
@@ -208,7 +215,7 @@ class LightingManager:
     def blackout(self) -> None:
         with self._lock:
             self._target = None
-            self._static_fill = DIM_COLOR
+            self._static_fill = self._bg_color
             self._force_update = True
 
     # -- animation ---------------------------------------------------------
@@ -278,12 +285,12 @@ class LightingManager:
             scale = self._brightness
         try:
             if not target:
-                backend.set_all(DIM_COLOR)
+                backend.set_all(self._bg_color)
                 backend.flush()
                 return
             factor = max(0.0, min(1.0, level)) * scale
             color = tuple(
-                int(DIM_COLOR[i] + (base[i] - DIM_COLOR[i]) * factor) for i in range(3)
+                int(self._bg_color[i] + (base[i] - self._bg_color[i]) * factor) for i in range(3)
             )
             backend.focus_key(target, color)  # type: ignore[arg-type]
         except Exception as exc:

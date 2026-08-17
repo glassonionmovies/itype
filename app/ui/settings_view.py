@@ -222,6 +222,11 @@ class SettingsView(QWidget):
         self.color_button.clicked.connect(self._pick_color)
         layout.addWidget(_row("Highlight color", self.color_button, "The color used for the target key."))
 
+        self.bg_color_button = QPushButton()
+        self.bg_color_button.setFixedSize(36, 36)
+        self.bg_color_button.clicked.connect(self._pick_bg_color)
+        layout.addWidget(_row("Background color", self.bg_color_button, "The color used for all other keys. Black means off."))
+
         self.hardware_card = Card()
         hardware_layout = QVBoxLayout(self.hardware_card)
         hardware_layout.setContentsMargins(18, 14, 18, 14)
@@ -299,6 +304,11 @@ class SettingsView(QWidget):
             f"QPushButton {{ background-color: {bg}; border: 1px solid {theme.BORDER.name()}; border-radius: 18px; }}"
         )
         
+        bg_color = settings.lighting_bg_color
+        self.bg_color_button.setStyleSheet(
+            f"QPushButton {{ background-color: {bg_color}; border: 1px solid {theme.BORDER.name()}; border-radius: 18px; }}"
+        )
+        
         self.custom_only_check.setChecked(settings.custom_only)
 
         self.sentence_list.clear()
@@ -341,7 +351,7 @@ class SettingsView(QWidget):
 
     def _pick_color(self) -> None:
         initial = QColor(self.settings.lighting_target_color)
-        color = QColorDialog.getColor(initial, self, "Pick Keyboard Color")
+        color = QColorDialog.getColor(initial, self, "Pick Highlight Color")
         if color.isValid():
             self.settings.lighting_target_color = color.name()
             self.settings.save()
@@ -349,6 +359,18 @@ class SettingsView(QWidget):
             self.reload()
             if self.lighting:
                 self.lighting.set_color(self.settings.lighting_color_rgb())
+
+    def _pick_bg_color(self) -> None:
+        initial = QColor(self.settings.lighting_bg_color)
+        color = QColorDialog.getColor(initial, self, "Pick Background Color")
+        if color.isValid():
+            self.settings.lighting_bg_color = color.name()
+            self.settings.save()
+            self.settings_changed.emit()
+            self.reload()
+            if self.lighting:
+                self.lighting.set_background_color(self.settings.lighting_bg_rgb())
+                self.lighting.blackout()
 
     # -- hardware panel ----------------------------------------------------
 

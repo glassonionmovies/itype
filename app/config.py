@@ -50,6 +50,7 @@ class Settings:
     lighting_backend: str = "auto"
     show_onscreen_keyboard: bool = True
     lighting_target_color: str = "#4285F4"
+    lighting_bg_color: str = "#000000"
 
     # -- content -----------------------------------------------------------
     category: str = ""
@@ -82,6 +83,13 @@ class Settings:
             return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
         except (ValueError, IndexError):
             return (66, 133, 244) # fallback #4285F4
+
+    def lighting_bg_rgb(self) -> tuple[int, int, int]:
+        h = self.lighting_bg_color.lstrip('#')
+        try:
+            return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+        except (ValueError, IndexError):
+            return (0, 0, 0) # fallback #000000
 
     def to_dict(self) -> dict:
         return asdict(self)

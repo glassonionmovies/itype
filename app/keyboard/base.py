@@ -61,6 +61,10 @@ class KeyboardLighting(ABC):
         self._connected = False
         self._device: DeviceInfo | None = None
         self._last_error: str = ""
+        self._dim_color: RGB = DIM_COLOR
+
+    def set_background(self, color: RGB) -> None:
+        self._dim_color = color
 
     # -- lifecycle ---------------------------------------------------------
 
@@ -100,14 +104,14 @@ class KeyboardLighting(ABC):
     # -- convenience used by the game -------------------------------------
 
     def set_all_dim(self) -> None:
-        self.set_all(DIM_COLOR)
+        self.set_all(self._dim_color)
 
     def highlight_key(self, key: str, color: RGB = TARGET_COLOR) -> None:
         self.set_key(key, color)
         self.flush()
 
     def clear_key(self, key: str) -> None:
-        self.set_key(key, DIM_COLOR)
+        self.set_key(key, self._dim_color)
         self.flush()
 
     def focus_key(self, key: str | None, color: RGB = TARGET_COLOR) -> None:
@@ -116,7 +120,7 @@ class KeyboardLighting(ABC):
         This is the game's core lighting primitive: it makes the target key
         unambiguous rather than merely brighter than its neighbours.
         """
-        self.set_all(DIM_COLOR)
+        self.set_all(self._dim_color)
         if key:
             self.set_key(key, color)
         self.flush()
