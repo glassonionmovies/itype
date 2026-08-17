@@ -164,7 +164,7 @@ class GameView(QWidget):
             self.feedback.voice.say("Ready", priority=True)
             
         self._countdown_step = 0
-        self._countdown_timer.start(1000)
+        self._countdown_timer.start(400)
         self.setFocus()
 
     def stop(self) -> None:

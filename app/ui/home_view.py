@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon, QPainter, QPixmap, QColor
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -22,32 +22,56 @@ from . import theme
 from .widgets import Card
 
 
+def _build_icon(emoji: str, base_color: QColor) -> QIcon:
+    pixmap = QPixmap(64, 64)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    
+    # Draw faded background circle
+    bg_color = QColor(base_color)
+    bg_color.setAlphaF(0.2)
+    painter.setBrush(bg_color)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.drawEllipse(0, 0, 64, 64)
+    
+    # Draw emoji centered
+    painter.setPen(theme.TEXT)
+    painter.setFont(theme.display_font(32))
+    painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, emoji)
+    painter.end()
+    return QIcon(pixmap)
+
 class CategoryButton(QPushButton):
     """A large, colourful category tile."""
 
     def __init__(self, category: str, parent: QWidget | None = None) -> None:
-        icon = sentence_data.CATEGORY_ICONS.get(category, "✏️")
-        super().__init__(f"{icon}\n{category}", parent)
+        emoji = sentence_data.CATEGORY_ICONS.get(category, "🐶")
+        super().__init__(f"  {category}", parent)
         self.category = category
         self.setCheckable(True)
-        self.setMinimumHeight(96)
-        self.setFont(theme.display_font(14, QFont.Weight.DemiBold))
+        self.setMinimumHeight(84)
+        self.setFont(theme.display_font(18, QFont.Weight.Medium))
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         color = theme.category_color(category)
+        
+        self.setIcon(_build_icon(emoji, color))
+        self.setIconSize(QPixmap(48, 48).size())
+        
         self.setStyleSheet(
             f"""
             QPushButton {{
-                background: {theme.SURFACE_LIGHT.name()};
-                border: 2px solid {theme.BORDER.name()};
-                border-radius: 18px;
-                font-size: 15px;
-                padding: 10px;
+                background: {theme.SURFACE.name()};
+                border: 1px solid {theme.BORDER.name()};
+                border-radius: 12px;
+                text-align: left;
+                padding-left: 16px;
+                color: {theme.TEXT.name()};
             }}
-            QPushButton:hover {{ border-color: {color.name()}; }}
+            QPushButton:hover {{ border-color: {theme.TEXT_FAINT.name()}; }}
             QPushButton:checked {{
-                background: {color.darker(240).name()};
-                border-color: {color.name()};
-                color: {color.lighter(140).name()};
+                background: {theme.BLUE.lighter(170).name()};
+                border: 2px solid {theme.BLUE.name()};
             }}
             """
         )
@@ -79,13 +103,25 @@ class HomeView(QWidget):
         root.setContentsMargins(48, 36, 48, 36)
         root.setSpacing(18)
 
-        title = QLabel("🐵  Typing Adventure")
-        title.setFont(theme.display_font(40, QFont.Weight.Black))
+        title_html = (
+            f"<span style='color:{theme.BLUE.name()}'>Typing </span>"
+            f"<span style='color:{theme.RED.name()}'>A</span>"
+            f"<span style='color:{theme.BLUE.name()}'>d</span>"
+            f"<span style='color:{theme.YELLOW.name()}'>v</span>"
+            f"<span style='color:{theme.BLUE.name()}'>e</span>"
+            f"<span style='color:{theme.GREEN.name()}'>n</span>"
+            f"<span style='color:{theme.BLUE.name()}'>t</span>"
+            f"<span style='color:{theme.GREEN.name()}'>u</span>"
+            f"<span style='color:{theme.RED.name()}'>r</span>"
+            f"<span style='color:{theme.YELLOW.name()}'>e</span>"
+        )
+        title = QLabel(title_html)
+        title.setFont(theme.display_font(48, QFont.Weight.Black))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root.addWidget(title)
 
         subtitle = QLabel("Find the letter. Press the key. You've got this.")
-        subtitle.setFont(theme.display_font(16, QFont.Weight.Normal))
+        subtitle.setFont(theme.display_font(18, QFont.Weight.Medium))
         subtitle.setStyleSheet(f"color: {theme.TEXT_MUTED.name()};")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root.addWidget(subtitle)
@@ -97,20 +133,23 @@ class HomeView(QWidget):
         progress_layout = QHBoxLayout(self.progress_card)
         progress_layout.setContentsMargins(24, 16, 24, 16)
         self._stat_labels: dict[str, QLabel] = {}
-        for key, caption in (
-            ("sentences", "Sentences"),
-            ("stars", "Stars"),
-            ("accuracy", "Accuracy"),
-            ("perfect", "Perfect"),
+        for key, caption, color in (
+            ("sentences", "SENTENCES", theme.BLUE),
+            ("stars", "STARS", theme.YELLOW),
+            ("accuracy", "ACCURACY", theme.GREEN),
+            ("perfect", "PERFECT", theme.RED),
         ):
             block = QVBoxLayout()
             value = QLabel("—")
-            value.setFont(theme.display_font(26, QFont.Weight.Black))
+            value.setFont(theme.display_font(34, QFont.Weight.Black))
+            value.setStyleSheet(f"color: {color.name()};")
             value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
             caption_label = QLabel(caption)
-            caption_label.setFont(theme.display_font(11, QFont.Weight.Normal))
-            caption_label.setStyleSheet(f"color: {theme.TEXT_MUTED.name()};")
+            caption_label.setFont(theme.display_font(13, QFont.Weight.Bold))
+            caption_label.setStyleSheet(f"color: {color.name()}; letter-spacing: 1px;")
             caption_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
             block.addWidget(value)
             block.addWidget(caption_label)
             progress_layout.addLayout(block, 1)
@@ -129,8 +168,9 @@ class HomeView(QWidget):
         categories = ["Surprise me!", *sentence_data.CATEGORIES]
         for index, category in enumerate(categories):
             if category == "Surprise me!":
-                button = CategoryButton("Funny")
-                button.setText("🎲\nSurprise me!")
+                button = CategoryButton("Surprise me!")
+                # Override icon for surprise me
+                button.setIcon(_build_icon("🎲", theme.BLUE))
                 button.category = ""
             else:
                 button = CategoryButton(category)

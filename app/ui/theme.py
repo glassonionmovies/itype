@@ -12,37 +12,43 @@ from PySide6.QtGui import QColor, QFont, QFontDatabase
 
 # -- palette ---------------------------------------------------------------
 
-BACKGROUND = QColor("#151824")
-SURFACE = QColor("#1E2233")
-SURFACE_LIGHT = QColor("#272C40")
-BORDER = QColor("#333950")
+BACKGROUND = QColor("#F8F9FA")
+SURFACE = QColor("#FFFFFF")
+SURFACE_LIGHT = QColor("#FFFFFF")
+BORDER = QColor("#DADCE0")
 
-TEXT = QColor("#EEF1FA")
-TEXT_MUTED = QColor("#8C93AC")
-TEXT_FAINT = QColor("#5A6079")
+TEXT = QColor("#202124")
+TEXT_MUTED = QColor("#5F6368")
+TEXT_FAINT = QColor("#9AA0A6")
 
-ACCENT = QColor("#4FA8FF")
-ACCENT_SOFT = QColor("#2D6699")
-SUCCESS = QColor("#4BE08C")
-WARNING = QColor("#FFAA3C")
-DANGER = QColor("#FF6B6B")
-GOLD = QColor("#FFD24A")
-PURPLE = QColor("#A78BFA")
+# Google Brand Colors
+BLUE = QColor("#4285F4")
+RED = QColor("#EA4335")
+YELLOW = QColor("#FBBC05")
+GREEN = QColor("#34A853")
+
+ACCENT = BLUE
+ACCENT_SOFT = QColor("#E8F0FE")
+SUCCESS = GREEN
+WARNING = YELLOW
+DANGER = RED
+GOLD = YELLOW
+PURPLE = QColor("#A142F4")
 
 #: Character states on the sentence strip.
 CHAR_PENDING = TEXT_FAINT
-CHAR_CURRENT = QColor("#FFFFFF")
+CHAR_CURRENT = TEXT
 CHAR_CORRECT = SUCCESS
 
 CATEGORY_COLORS = {
-    "Animals": QColor("#4BE08C"),
-    "Family": QColor("#FFAA3C"),
-    "Food": QColor("#FF6B6B"),
-    "Activities": QColor("#4FA8FF"),
-    "Objects": QColor("#A78BFA"),
-    "Funny": QColor("#F472B6"),
-    "Nature": QColor("#34D399"),
-    "Custom": QColor("#FFD24A"),
+    "Animals": TEXT_MUTED,
+    "Family": RED,
+    "Food": YELLOW,
+    "Activities": BLUE,
+    "Objects": TEXT_MUTED,
+    "Funny": PURPLE,
+    "Nature": GREEN,
+    "Custom": GOLD,
 }
 
 
@@ -126,30 +132,30 @@ QPushButton {{
     font-weight: 600;
 }}
 QPushButton:hover {{
-    background: {BORDER.name()};
-    border-color: {ACCENT_SOFT.name()};
+    background: #F1F3F4;
+    border-color: {BORDER.name()};
 }}
 QPushButton:pressed {{
-    background: {SURFACE.name()};
+    background: #E8EAED;
 }}
 QPushButton:disabled {{
     color: {TEXT_FAINT.name()};
-    background: {SURFACE.name()};
+    background: {SURFACE_LIGHT.name()};
 }}
 
 QPushButton#primary {{
     background: {ACCENT.name()};
-    color: #0C1220;
+    color: #FFFFFF;
     border: none;
     font-size: 17px;
     font-weight: 700;
     padding: 15px 34px;
 }}
 QPushButton#primary:hover {{
-    background: #6FBAFF;
+    background: #1A73E8;
 }}
 QPushButton#primary:pressed {{
-    background: {ACCENT_SOFT.name()};
+    background: #174EA6;
 }}
 
 QPushButton#ghost {{
@@ -159,13 +165,13 @@ QPushButton#ghost {{
 }}
 QPushButton#ghost:hover {{
     color: {TEXT.name()};
-    border-color: {ACCENT_SOFT.name()};
+    background: #F1F3F4;
 }}
 
 QFrame#card {{
     background: {SURFACE.name()};
     border: 1px solid {BORDER.name()};
-    border-radius: 20px;
+    border-radius: 16px;
 }}
 
 QComboBox, QSpinBox, QLineEdit {{
@@ -187,6 +193,7 @@ QComboBox QAbstractItemView {{
     background: {SURFACE_LIGHT.name()};
     border: 1px solid {BORDER.name()};
     selection-background-color: {ACCENT_SOFT.name()};
+    selection-color: {TEXT.name()};
     outline: none;
 }}
 
@@ -208,6 +215,7 @@ QCheckBox::indicator:checked {{
 
 QScrollArea {{
     border: none;
+    background: transparent;
 }}
 QScrollBar:vertical {{
     background: transparent;
@@ -239,7 +247,7 @@ QListWidget::item {{
 }}
 QListWidget::item:selected {{
     background: {ACCENT_SOFT.name()};
-    color: {TEXT.name()};
+    color: {ACCENT.name()};
 }}
 
 QToolTip {{

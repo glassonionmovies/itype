@@ -8,10 +8,11 @@ keyboard lighting is doing and why.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QColorDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -211,6 +212,11 @@ class SettingsView(QWidget):
         self.highlight_box.currentIndexChanged.connect(self._on_change)
         layout.addWidget(_row("Highlight style", self.highlight_box))
 
+        self.color_button = QPushButton()
+        self.color_button.setFixedSize(36, 36)
+        self.color_button.clicked.connect(self._pick_color)
+        layout.addWidget(_row("Highlight color", self.color_button, "The color used for the target key."))
+
         self.hardware_card = Card()
         hardware_layout = QVBoxLayout(self.hardware_card)
         hardware_layout.setContentsMargins(18, 14, 18, 14)
@@ -280,6 +286,13 @@ class SettingsView(QWidget):
         self.onscreen_check.setChecked(settings.show_onscreen_keyboard)
         self.lighting_check.setChecked(settings.keyboard_lighting)
         self._select(self.highlight_box, settings.keyboard_highlight)
+        
+        # Style color button
+        bg = settings.lighting_target_color
+        self.color_button.setStyleSheet(
+            f"QPushButton {{ background-color: {bg}; border: 1px solid {theme.BORDER.name()}; border-radius: 18px; }}"
+        )
+        
         self.custom_only_check.setChecked(settings.custom_only)
 
         self.sentence_list.clear()
@@ -318,6 +331,17 @@ class SettingsView(QWidget):
 
         settings.save()
         self.settings_changed.emit()
+
+    def _pick_color(self) -> None:
+        initial = QColor(self.settings.lighting_target_color)
+        color = QColorDialog.getColor(initial, self, "Pick Keyboard Color")
+        if color.isValid():
+            self.settings.lighting_target_color = color.name()
+            self.settings.save()
+            self.settings_changed.emit()
+            self.reload()
+            if self.lighting:
+                self.lighting.set_color(self.settings.lighting_color_rgb())
 
     # -- hardware panel ----------------------------------------------------
 
