@@ -146,7 +146,9 @@ def probe_open(interface: HidInterface) -> tuple[bool, str]:
         return False, "hidapi not installed"
 
     try:
-        handle = hid.Device(path=interface.path.encode() if isinstance(interface.path, str) else interface.path)
+        path = interface.path.encode() if isinstance(interface.path, str) else interface.path
+        handle = hid.device()
+        handle.open_path(path)
     except Exception as exc:
         hint = ""
         if interface.usage_page == KEYBOARD_USAGE_PAGE:

@@ -275,6 +275,7 @@ class HidppKeyboardLighting(KeyboardLighting):
         self._rgb_index: int | None = None
         self._zone_scheme = zone_scheme
         self._pending: dict[int, RGB] = {}
+        self._current_state: dict[int, RGB] = {}
         self._took_control = False
 
     # -- zone mapping ------------------------------------------------------
@@ -310,13 +311,14 @@ class HidppKeyboardLighting(KeyboardLighting):
         for entry in candidates:
             path = entry.get("path")
             try:
-                handle = hid.Device(path=path)
+                handle = hid.device()
+                handle.open_path(path)
             except Exception as exc:
                 errors.append(f"{entry.get('product_string', '?')}: {exc}")
                 continue
 
             try:
-                handle.nonblocking = False
+                handle.set_nonblocking(0)
             except Exception:
                 pass
 
@@ -388,6 +390,7 @@ class HidppKeyboardLighting(KeyboardLighting):
             except Exception as exc:
                 log.info("restore: releasing RGB control failed: %s", exc)
         self._took_control = False
+        self._current_state.clear()
 
         if self._handle is not None:
             try:
@@ -435,38 +438,35 @@ class HidppKeyboardLighting(KeyboardLighting):
         ok = True
 
         try:
-            # A whole-keyboard fill collapses into one range write.
+            # Expand _ALL_ZONES to individual zones. Some firmwares (like PRO X 60)
+            # do not support FN_SET_RANGE or FN_SET_MULTI and will time out or error.
             if _ALL_ZONES in pending:
-                color = pending.pop(_ALL_ZONES)
-                r, g, b = _clamp(color)
-                payload = bytes([_ZONE_MIN, _ZONE_MAX, r, g, b])
-                ok &= self._send(transport, index, FN_SET_RANGE, payload)
+                fill_color = pending.pop(_ALL_ZONES)
+                for z in range(_ZONE_MIN, _ZONE_MAX + 1):
+                    if z not in pending:
+                        pending[z] = fill_color
 
-            # Group the rest by colour so same-coloured keys share a packet.
-            by_color: dict[RGB, list[int]] = {}
+            # Pack all zones into 4-zone FN_SET_INDIVIDUAL reports
+            # Only send updates for zones that actually changed to avoid overwhelming the USB bus
+            buffer = b""
+            changes_made = False
             for zone, color in pending.items():
-                by_color.setdefault(_clamp(color), []).append(zone)
-
-            for color, zones in by_color.items():
-                r, g, b = color
-                zones.sort()
-                # Runs of four or more are cheaper as a multi-key write.
-                while len(zones) > 3:
-                    batch, zones = zones[:13], zones[13:]
-                    payload = bytes([r, g, b]) + bytes(batch)
-                    ok &= self._send(transport, index, FN_SET_MULTI, payload)
-                # Up to four (zone, colour) quads fit in one long report.
-                buffer = b""
-                for zone in zones:
-                    buffer += bytes([zone, r, g, b])
-                    if len(buffer) >= 16:
-                        ok &= self._send(transport, index, FN_SET_INDIVIDUAL, buffer)
-                        buffer = b""
-                if buffer:
+                r, g, b = _clamp(color)
+                clamped_color = (r, g, b)
+                if self._current_state.get(zone) == clamped_color:
+                    continue
+                self._current_state[zone] = clamped_color
+                changes_made = True
+                
+                buffer += bytes([zone, r, g, b])
+                if len(buffer) >= 16:
                     ok &= self._send(transport, index, FN_SET_INDIVIDUAL, buffer)
+                    buffer = b""
+            if buffer:
+                ok &= self._send(transport, index, FN_SET_INDIVIDUAL, buffer)
 
             # Commit. Without FrameEnd the device shows nothing at all.
-            if ok:
+            if ok and changes_made:
                 self._send(transport, index, FN_FRAME_END, b"\x00")
         except Exception as exc:  # never let lighting break the game
             log.warning("HID++ flush failed: %s", exc)
@@ -494,18 +494,18 @@ class HidppKeyboardLighting(KeyboardLighting):
             return False
         r, g, b = _clamp(color)
         dim_r, dim_g, dim_b = _clamp(DIM_COLOR)
-        ok = self._send(
-            self._transport,
-            self._lighting_index,
-            FN_SET_RANGE,
-            bytes([_ZONE_MIN, _ZONE_MAX, dim_r, dim_g, dim_b]),
-        )
-        ok &= self._send(
-            self._transport,
-            self._lighting_index,
-            FN_SET_INDIVIDUAL,
-            bytes([zone, r, g, b]),
-        )
+        buffer = b""
+        ok = True
+        for z in range(_ZONE_MIN, _ZONE_MAX + 1):
+            if z == zone:
+                buffer += bytes([z, r, g, b])
+            else:
+                buffer += bytes([z, dim_r, dim_g, dim_b])
+            if len(buffer) >= 16:
+                ok &= self._send(self._transport, self._lighting_index, FN_SET_INDIVIDUAL, buffer)
+                buffer = b""
+        if buffer:
+            ok &= self._send(self._transport, self._lighting_index, FN_SET_INDIVIDUAL, buffer)
         self._send(self._transport, self._lighting_index, FN_FRAME_END, b"\x00")
         return ok
 
