@@ -57,6 +57,8 @@ class Settings:
 
     level: int = 0
     """0 means any level."""
+    
+    all_caps: bool = False
 
     custom_only: bool = False
 

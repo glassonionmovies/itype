@@ -124,6 +124,10 @@ class GameView(QWidget):
 
     def start(self, text: str) -> None:
         """Begin a new sentence."""
+        
+        if self.settings.all_caps:
+            text = text.upper()
+            
         profile = profile_for(self.settings.as_difficulty())
 
         attention = AttentionSettings(

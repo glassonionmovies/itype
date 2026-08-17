@@ -258,7 +258,8 @@ def _iter_candidate_devices():
         log.warning("hid.enumerate failed: %s", exc)
         return
     for entry in entries:
-        if entry.get("usage_page", 0) == VENDOR_USAGE_PAGE:
+        page = entry.get("usage_page", 0)
+        if (page & 0xFF00) == 0xFF00:
             yield entry
 
 

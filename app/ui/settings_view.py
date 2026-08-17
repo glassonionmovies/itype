@@ -127,6 +127,11 @@ class SettingsView(QWidget):
 
         # -- feedback ------------------------------------------------------
         layout.addWidget(_section("Sound and voice"))
+
+        self.all_caps_check = QCheckBox()
+        self.all_caps_check.stateChanged.connect(self._on_change)
+        layout.addWidget(_row("EVERYTHING CAPS", self.all_caps_check, "All sentences will be shown in UPPERCASE."))
+
         self.voice_check = QCheckBox()
         self.voice_check.stateChanged.connect(self._on_change)
         layout.addWidget(_row("Voice coaching", self.voice_check))
@@ -272,6 +277,7 @@ class SettingsView(QWidget):
 
         self._select(self.difficulty_box, settings.difficulty)
         self.shift_check.setChecked(settings.require_shift)
+        self.all_caps_check.setChecked(settings.all_caps)
         self.voice_check.setChecked(settings.voice_cues)
         self._select(self.voice_box, settings.voice_name)
         self._select(self.sound_box, settings.sound_level)
@@ -312,6 +318,7 @@ class SettingsView(QWidget):
         settings = self.settings
         settings.difficulty = self.difficulty_box.currentData()
         settings.require_shift = self.shift_check.isChecked()
+        settings.all_caps = self.all_caps_check.isChecked()
         settings.voice_cues = self.voice_check.isChecked()
         settings.voice_name = self.voice_box.currentData() or ""
         settings.sound_level = self.sound_box.currentData()
