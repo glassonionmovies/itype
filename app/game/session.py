@@ -112,7 +112,7 @@ class GameSession:
 
         if self.voice and self.profile.voice_every_key and result.next_char:
             spoken = keymap.spoken_name_for_char(result.next_char)
-            self.voice.say(f"Great! Now {spoken}.")
+            self.voice.say(f"Great! Now {spoken}.", priority=True)
 
     def _on_mistake(self, result: PressResult) -> None:
         if self.sounds:

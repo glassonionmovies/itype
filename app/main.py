@@ -89,6 +89,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.no_lighting or not settings.keyboard_lighting:
         backend = "off"
     lighting.start(backend)
+    lighting.blackout()
     for note in lighting.notes:
         log.info("lighting: %s", note)
 

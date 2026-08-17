@@ -91,6 +91,7 @@ def zone_id_hid_minus_3(key: str) -> int | None:
     usage = keymap.hid_usage_id(key)
     if usage is None:
         return None
+    
     zone = usage - 3
     return zone if zone > 0 else None
 
@@ -195,13 +196,13 @@ class HidppTransport:
         )
 
     def request_with_retry(
-        self, feature_index: int, function: int, payload: bytes = b""
+        self, feature_index: int, function: int, payload: bytes = b"", timeout_ms: int = 600
     ) -> bytes:
         """Issue a request, backing off when the device reports BUSY."""
         attempt = 0
         while True:
             try:
-                return self.request(feature_index, function, payload)
+                return self.request(feature_index, function, payload, timeout_ms=timeout_ms)
             except HidppError as exc:
                 if exc.code == ERROR_BUSY and attempt < len(BUSY_BACKOFF_S):
                     time.sleep(BUSY_BACKOFF_S[attempt])
@@ -458,23 +459,19 @@ class HidppKeyboardLighting(KeyboardLighting):
                 self._current_state[zone] = clamped_color
                 changes_made = True
                 
-                buffer += bytes([zone, r, g, b])
-                if len(buffer) >= 16:
-                    ok &= self._send(transport, index, FN_SET_INDIVIDUAL, buffer)
-                    buffer = b""
-            if buffer:
-                ok &= self._send(transport, index, FN_SET_INDIVIDUAL, buffer)
+                buffer = bytes([zone, r, g, b])
+                self._send(transport, index, FN_SET_INDIVIDUAL, buffer, timeout_ms=50)
 
             # Commit. Without FrameEnd the device shows nothing at all.
-            if ok and changes_made:
+            if changes_made:
                 self._send(transport, index, FN_FRAME_END, b"\x00")
         except Exception as exc:  # never let lighting break the game
             log.warning("HID++ flush failed: %s", exc)
             self._connected = False
 
-    def _send(self, transport, index: int, function: int, payload: bytes) -> bool:
+    def _send(self, transport, index: int, function: int, payload: bytes, timeout_ms: int = 600) -> bool:
         try:
-            transport.request_with_retry(index, function, payload)
+            transport.request_with_retry(index, function, payload, timeout_ms=timeout_ms)
             return True
         except HidppError as exc:
             log.debug("HID++ sub-function 0x%02x failed: %s", function, exc)
@@ -498,21 +495,17 @@ class HidppKeyboardLighting(KeyboardLighting):
         ok = True
         for z in range(_ZONE_MIN, _ZONE_MAX + 1):
             if z == zone:
-                buffer += bytes([z, r, g, b])
+                buffer = bytes([z, r, g, b])
             else:
-                buffer += bytes([z, dim_r, dim_g, dim_b])
-            if len(buffer) >= 16:
-                ok &= self._send(self._transport, self._lighting_index, FN_SET_INDIVIDUAL, buffer)
-                buffer = b""
-        if buffer:
-            ok &= self._send(self._transport, self._lighting_index, FN_SET_INDIVIDUAL, buffer)
-        self._send(self._transport, self._lighting_index, FN_FRAME_END, b"\x00")
+                buffer = bytes([z, dim_r, dim_g, dim_b])
+            self._send(self._transport, self._lighting_index, FN_SET_INDIVIDUAL, buffer, timeout_ms=50)
+        self._send(self._transport, self._lighting_index, FN_FRAME_END, b"\x00", timeout_ms=50)
         return ok
 
 
 _ALL_ZONES = -1
 _ZONE_MIN = 1
-_ZONE_MAX = 120
+_ZONE_MAX = 255
 
 
 def _clamp(color: RGB) -> RGB:

@@ -54,6 +54,10 @@ class GameView(QWidget):
         self._attention_timer.timeout.connect(self._check_attention)
         self._attention_timer.setInterval(500)
 
+        self._countdown_timer = QTimer(self)
+        self._countdown_timer.timeout.connect(self._on_countdown_tick)
+        self._countdown_step = 0
+
     # -- construction ------------------------------------------------------
 
     def _build(self) -> None:
@@ -144,24 +148,59 @@ class GameView(QWidget):
         self.keyboard.set_animate(self.settings.animations_enabled)
         self.hint.set_animate(self.settings.animations_enabled)
 
-        show_keyboard = profile.show_onscreen_keyboard and self.settings.show_onscreen_keyboard
-        self.keyboard_card.setVisible(show_keyboard)
-        self.hint.setVisible(profile.show_target_letter)
+        # Hide UI elements during countdown
+        self.strip.setVisible(False)
+        self.keyboard_card.setVisible(False)
+        self.hint.setVisible(False)
+
+        if self.lighting:
+            self.lighting.blackout()
 
         self._update_lighting_note()
-        self.session.begin()
-        self._refresh()
-        self._attention_timer.start()
+        self.setFocus()
+        
+        self.coach_label.setText("Ready...")
+        if self.feedback and self.feedback.voice:
+            self.feedback.voice.say("Ready", priority=True)
+            
+        self._countdown_step = 0
+        self._countdown_timer.start(1000)
         self.setFocus()
 
     def stop(self) -> None:
         self._attention_timer.stop()
+        self._countdown_timer.stop()
         if self.session:
             self.session.end()
 
     def _on_back(self) -> None:
         self.stop()
         self.quit_requested.emit()
+
+    def _on_countdown_tick(self) -> None:
+        self._countdown_step += 1
+        if self._countdown_step == 1:
+            self.coach_label.setText("Set...")
+            if self.feedback and self.feedback.voice:
+                self.feedback.voice.say("Set", priority=True)
+        elif self._countdown_step == 2:
+            self.coach_label.setText("Go!")
+            if self.feedback and self.feedback.voice:
+                self.feedback.voice.say("Go", priority=True)
+        else:
+            self._countdown_timer.stop()
+            self.coach_label.setText("")
+            
+            profile = profile_for(self.settings.as_difficulty())
+            self.strip.setVisible(True)
+            show_keyboard = profile.show_onscreen_keyboard and self.settings.show_onscreen_keyboard
+            self.keyboard_card.setVisible(show_keyboard)
+            self.hint.setVisible(profile.show_target_letter)
+            
+            if self.session:
+                self.session.begin()
+            self._refresh()
+            self._attention_timer.start()
 
     def _update_lighting_note(self) -> None:
         """Tell the parent, quietly, what the keyboard is doing.
@@ -185,7 +224,7 @@ class GameView(QWidget):
         if event.key() == Qt.Key.Key_Escape:
             self._on_back()
             return
-        if self.session is None or self.session.engine.finished:
+        if self.session is None or not self.session.started or self.session.engine.finished:
             super().keyPressEvent(event)
             return
 
