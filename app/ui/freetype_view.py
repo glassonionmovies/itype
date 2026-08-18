@@ -80,7 +80,7 @@ class FreeTypeView(QWidget):
         root.addSpacing(18)
 
         self.hint_label = QLabel(
-            "Press Space to confirm a word \u00b7 Press . to finish your sentence"
+            "Space or , to confirm a word \u00b7 Press . to finish your sentence"
         )
         self.hint_label.setFont(theme.display_font(14, QFont.Weight.Normal))
         self.hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -105,16 +105,17 @@ class FreeTypeView(QWidget):
         self.voice = voice
 
     def _refresh_display(self) -> None:
-        confirmed = self.engine.confirmed_words
+        # Use sentence_parts so commas are shown correctly (e.g. "Arth,")
+        confirmed_parts = self.engine.sentence_parts
         partial = self.engine.current_word
 
-        if not confirmed and not partial:
+        if not confirmed_parts and not partial:
             self.text_label.setStyleSheet(f"color: {theme.TEXT_MUTED.name()};")
             self.text_label.setText("Start typing\u2026")
             return
 
         parts = []
-        for w in confirmed:
+        for w in confirmed_parts:
             parts.append(
                 f"<span style='color:{theme.TEXT.name()};'>{w}</span>"
             )
@@ -127,9 +128,9 @@ class FreeTypeView(QWidget):
 
     def _flash_rejected(self) -> None:
         partial = self.engine.current_word
-        confirmed = self.engine.confirmed_words
+        confirmed_parts = self.engine.sentence_parts
         parts = []
-        for w in confirmed:
+        for w in confirmed_parts:
             parts.append(f"<span style='color:{theme.TEXT.name()};'>{w}</span>")
         if partial:
             parts.append(
@@ -146,7 +147,7 @@ class FreeTypeView(QWidget):
 
     def _reset_hint(self) -> None:
         self.hint_label.setText(
-            "Press Space to confirm a word \u00b7 Press . to finish your sentence"
+            "Space or , to confirm a word \u00b7 Press . to finish your sentence"
         )
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
@@ -186,10 +187,10 @@ class FreeTypeView(QWidget):
         elif result.event == FreeEvent.WORD_REJECTED:
             self._flash_rejected()
             self._set_hint(
-                "\u26a0\ufe0f  Not an English word \u2014 keep typing or press Backspace",
+                "\u26a0\ufe0f  Hmm, not sure about that word \u2014 keep typing or press Backspace",
                 temporary=True,
             )
-            self.voice.say("Not a word yet. Keep typing.", priority=True)
+            self.voice.say("Hmm, keep typing.", priority=True)
 
         elif result.event == FreeEvent.SENTENCE_DONE:
             sentence = result.sentence
