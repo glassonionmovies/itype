@@ -63,16 +63,22 @@ class GameSession:
     # -- lifecycle ---------------------------------------------------------
 
     def begin(self) -> None:
-        """Announce the sentence and light the first key."""
+        """Read the whole sentence aloud, then prompt for the first letter."""
         self.started = True
         self._last_activity = self._clock()
         self._reminders_given = 0
-        if self.voice:
-            self.voice.say("Let's type!", priority=True)
         self._sync_lighting()
         first = self.engine.expected_char
-        if first and self.profile.voice_every_key and self.voice:
-            self.voice.say(f"Find {keymap.spoken_name_for_char(first)}.")
+        if self.voice:
+            sentence_text = self.engine.sentence.text
+            if first and self.profile.voice_every_key:
+                first_spoken = keymap.spoken_name_for_char(first)
+                self.voice.say(
+                    f"{sentence_text}. Type the letter {first_spoken}.",
+                    priority=True,
+                )
+            else:
+                self.voice.say(sentence_text, priority=True)
 
     def end(self) -> None:
         """Release the keyboard back to a neutral state."""
@@ -96,14 +102,33 @@ class GameSession:
             self._on_mistake(result)
         return result
 
+    def _word_at(self, index: int) -> str:
+        """Return the full word that contains the character at *index*."""
+        chars = self.engine.sentence.characters
+        # Walk back to the start of the word
+        start = index
+        while start > 0 and chars[start - 1].display != " ":
+            start -= 1
+        # Walk forward to the end of the word
+        end = index
+        while end < len(chars) and chars[end].display != " ":
+            end += 1
+        return "".join(c.display for c in chars[start:end])
+
     def _on_correct(self, result: PressResult) -> None:
         if result.finished:
             if self.sounds:
                 self.sounds.play("complete")
-            if self.voice:
-                self.voice.say("You did it!", priority=True)
             if self.lighting:
                 self.lighting.celebrate()
+            if self.voice:
+                # Report speed in correct characters per minute (round number)
+                cpm = round(self.engine.correct / max(self.engine.elapsed, 0.1) * 60)
+                self.voice.say(
+                    f"Good job! You did fantastic! "
+                    f"Your typing speed is {cpm} letters per minute.",
+                    priority=True,
+                )
             return
 
         if self.sounds:
@@ -111,8 +136,19 @@ class GameSession:
         self._sync_lighting()
 
         if self.voice and self.profile.voice_every_key and result.next_char:
-            spoken = keymap.spoken_name_for_char(result.next_char)
-            self.voice.say(f"Great! Now {spoken}.", priority=True)
+            just_typed = keymap.spoken_name_for_char(result.expected_char)
+            next_spoken = keymap.spoken_name_for_char(result.next_char)
+            # Detect word boundary: the character just typed was a space
+            if result.expected_char == " ":
+                # We finished a space — the next word is starting
+                next_word = self._word_at(result.index)
+                self.voice.say(
+                    f"Word complete. The next word is {next_word}. "
+                    f"Type the letter {next_spoken}.",
+                    priority=True,
+                )
+            else:
+                self.voice.say(just_typed, priority=True)
 
     def _on_mistake(self, result: PressResult) -> None:
         if self.sounds:

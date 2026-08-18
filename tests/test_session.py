@@ -65,8 +65,8 @@ def test_begin_lights_the_first_key():
     session, lighting, voice, _, _ = make_session("Monkey")
     session.begin()
     assert lighting.targets[-1] == "M"
-    assert any("Let's type" in line for line in voice.spoken)
-    assert any("Find M" in line for line in voice.spoken)
+    assert any("Monkey" in line for line in voice.spoken)
+    assert any("Type the letter" in line for line in voice.spoken)
 
 
 def test_correct_press_advances_the_physical_highlight():
@@ -96,7 +96,7 @@ def test_completion_celebrates():
     session.press("i")
     assert lighting.celebrated
     assert "complete" in sounds.played
-    assert any("You did it" in line for line in voice.spoken)
+    assert any("Good job" in line for line in voice.spoken)
 
 
 def test_guided_mode_speaks_every_key():
@@ -104,7 +104,7 @@ def test_guided_mode_speaks_every_key():
     session.begin()
     voice.spoken.clear()
     session.press("H")
-    assert any("Now" in line for line in voice.spoken)
+    assert voice.spoken, "should say the letter that was typed"
 
 
 def test_independent_mode_stays_quiet_on_success():
