@@ -17,12 +17,13 @@ from ..keyboard.manager import LightingManager
 from . import theme
 from .game_view import GameView
 from .home_view import HomeView
+from .freetype_view import FreeTypeView
 from .results_view import ResultsView
 from .settings_view import SettingsView
 
 log = logging.getLogger(__name__)
 
-HOME, GAME, RESULTS, SETTINGS = range(4)
+HOME, GAME, RESULTS, SETTINGS, FREE_TYPE = range(5)
 
 
 class MainWindow(QMainWindow):
@@ -57,12 +58,14 @@ class MainWindow(QMainWindow):
         )
         self.results_view = ResultsView(settings)
         self.settings_view = SettingsView(settings, database, lighting)
+        self.free_type_view = FreeTypeView(voice=self.feedback_bundle.voice)
 
         for view in (
             self.home_view,
             self.game_view,
             self.results_view,
             self.settings_view,
+            self.free_type_view,
         ):
             self.stack.addWidget(view)
 
@@ -98,6 +101,7 @@ class MainWindow(QMainWindow):
         self.home_view.play_requested.connect(self._start_sentence)
         self.home_view.settings_requested.connect(self._open_settings)
         self.home_view.free_play_requested.connect(self._start_free_play)
+        self.home_view.free_type_requested.connect(self._start_free_type)
 
         self.game_view.finished.connect(self._on_finished)
         self.game_view.quit_requested.connect(self._go_home)
@@ -109,12 +113,15 @@ class MainWindow(QMainWindow):
         self.settings_view.closed.connect(self._go_home)
         self.settings_view.settings_changed.connect(self._apply_settings)
 
+        self.free_type_view.quit_requested.connect(self._go_home)
+
     def _apply_settings(self) -> None:
         """Push settings changes into the live services."""
         self.feedback_bundle.apply(self.settings)
         # The adapter captured the old voice object; rebuild it.
         self.game_view.feedback = self._game_feedback()
         self.game_view.settings = self.settings
+        self.free_type_view.update_voice(self.feedback_bundle.voice)
 
         self.lighting.set_mode(self.settings.keyboard_highlight)
         if not self.settings.keyboard_lighting:
@@ -132,6 +139,11 @@ class MainWindow(QMainWindow):
         word, _icon = random.choice(sentence_data.FREE_PLAY_WORDS)
         self._free_play = True
         self._start_sentence(word)
+
+    def _start_free_type(self) -> None:
+        self.free_type_view.update_voice(self.feedback_bundle.voice)
+        self.free_type_view.start()
+        self.stack.setCurrentIndex(FREE_TYPE)
 
     def _next_sentence(self) -> None:
         if self._free_play:
@@ -159,6 +171,7 @@ class MainWindow(QMainWindow):
     def _go_home(self) -> None:
         self._free_play = False
         self.game_view.stop()
+        self.free_type_view.stop()
         self.lighting.blackout()
         self.home_view.refresh()
         self.stack.setCurrentIndex(HOME)
@@ -169,6 +182,7 @@ class MainWindow(QMainWindow):
         """Hand the keyboard back before the window disappears."""
         try:
             self.game_view.stop()
+            self.free_type_view.stop()
             self.feedback_bundle.shutdown()
             self.lighting.shutdown()
             self.database.close()

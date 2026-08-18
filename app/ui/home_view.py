@@ -83,6 +83,7 @@ class HomeView(QWidget):
     play_requested = Signal(str)
     settings_requested = Signal()
     free_play_requested = Signal()
+    free_type_requested = Signal()
 
     def __init__(
         self,
@@ -127,6 +128,16 @@ class HomeView(QWidget):
         root.addWidget(subtitle)
 
         root.addSpacing(6)
+
+        # -- Free Type hero button (top option) ----------------------------
+        free_type_btn = QPushButton("\u270f\ufe0f   Free Type  \u2014  Write your own sentence")
+        free_type_btn.setObjectName("primary")
+        free_type_btn.setMinimumHeight(64)
+        free_type_btn.setFont(theme.display_font(20, QFont.Weight.DemiBold))
+        free_type_btn.clicked.connect(self.free_type_requested.emit)
+        root.addWidget(free_type_btn)
+
+        root.addSpacing(4)
 
         # Progress summary.
         self.progress_card = Card()
