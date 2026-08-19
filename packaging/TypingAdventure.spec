@@ -68,6 +68,7 @@ exe = EXE(  # noqa: F821
     target_arch=None,  # follows the building machine (arm64 or x86_64)
     codesign_identity=None,
     entitlements_file=None,
+    icon=str(ROOT / "packaging" / "icon.ico") if (ROOT / "packaging" / "icon.ico").exists() else None,
 )
 
 coll = COLLECT(  # noqa: F821

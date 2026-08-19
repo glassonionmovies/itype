@@ -93,6 +93,11 @@ def main() -> int:
         draw(size * 2).save(str(ICONSET / f"icon_{size}x{size}@2x.png"))
     print(f"Wrote {len(SIZES) * 2} PNGs to {ICONSET}")
 
+    # Generate an .ico file for Windows
+    ICO = HERE / "icon.ico"
+    draw(256).save(str(ICO))
+    print(f"Wrote {ICO}")
+
     if sys.platform == "darwin" and shutil.which("iconutil"):
         subprocess.run(
             ["iconutil", "-c", "icns", str(ICONSET), "-o", str(ICNS)], check=True
