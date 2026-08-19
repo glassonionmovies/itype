@@ -71,8 +71,8 @@ def test_every_category_has_sentences():
         assert sentence_data.by_category(category), f"{category} is empty"
 
 
-def test_levels_one_through_three_are_populated():
-    for level in (1, 2, 3):
+def test_levels_two_is_populated():
+    for level in (2,):
         assert sentence_data.by_level(level)
 
 
@@ -93,8 +93,8 @@ def test_random_entry_avoids_an_immediate_repeat():
 def test_random_entry_respects_category():
     rng = random.Random(1)
     for _ in range(10):
-        entry = sentence_data.random_entry(category="Animals", rng=rng)
-        assert entry.category == "Animals"
+        entry = sentence_data.random_entry(category="Science Learning", rng=rng)
+        assert entry.category == "Science Learning"
 
 
 def test_free_play_words_are_typeable():

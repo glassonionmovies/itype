@@ -54,73 +54,18 @@ class SentenceEntry:
     """1 is easiest. Higher levels add length, capitals and punctuation."""
 
 
-BUILTIN: tuple[SentenceEntry, ...] = (
-    # -- level 1: short, simple, mostly lowercase ------------------------
-    SentenceEntry("Monkey is jumping.", ANIMALS, 1),
-    SentenceEntry("The dog is running.", ANIMALS, 1),
-    SentenceEntry("The cat is sleeping.", ANIMALS, 1),
-    SentenceEntry("A duck can swim.", ANIMALS, 1),
-    SentenceEntry("The bird can fly.", ANIMALS, 1),
-    SentenceEntry("The fish is blue.", ANIMALS, 1),
-    SentenceEntry("Dad is home.", FAMILY, 1),
-    SentenceEntry("Mom is happy.", FAMILY, 1),
-    SentenceEntry("I love my family.", FAMILY, 1),
-    SentenceEntry("My sister can read.", FAMILY, 1),
-    SentenceEntry("I like pizza.", FOOD, 1),
-    SentenceEntry("The apple is red.", FOOD, 1),
-    SentenceEntry("I want a cookie.", FOOD, 1),
-    SentenceEntry("Milk is cold.", FOOD, 1),
-    SentenceEntry("The car is red.", OBJECTS, 1),
-    SentenceEntry("My ball is round.", OBJECTS, 1),
-    SentenceEntry("The book is open.", OBJECTS, 1),
-    SentenceEntry("The sun is bright.", NATURE, 1),
-    SentenceEntry("The sky is blue.", NATURE, 1),
-    SentenceEntry("I can run fast.", ACTIVITIES, 1),
-    SentenceEntry("We like to play.", ACTIVITIES, 1),
-    SentenceEntry("Let us go outside.", ACTIVITIES, 1),
-    # -- level 2: longer, more punctuation -------------------------------
-    SentenceEntry("The monkey ate a banana.", ANIMALS, 2),
-    SentenceEntry("An elephant has big ears.", ANIMALS, 2),
-    SentenceEntry("The tiger has orange stripes.", ANIMALS, 2),
-    SentenceEntry("Penguins waddle on the ice.", ANIMALS, 2),
-    SentenceEntry("A turtle walks very slowly.", ANIMALS, 2),
-    SentenceEntry("Grandma makes the best soup.", FAMILY, 2),
-    SentenceEntry("My brother plays the drums.", FAMILY, 2),
-    SentenceEntry("We eat dinner together.", FAMILY, 2),
-    SentenceEntry("Dad is making pancakes.", FAMILY, 2),
-    SentenceEntry("Pizza has cheese on top.", FOOD, 2),
-    SentenceEntry("I eat cereal for breakfast.", FOOD, 2),
-    SentenceEntry("Strawberries taste sweet.", FOOD, 2),
-    SentenceEntry("We ride our bikes to the park.", ACTIVITIES, 2),
-    SentenceEntry("I can jump very high.", ACTIVITIES, 2),
-    SentenceEntry("Swimming is my favorite.", ACTIVITIES, 2),
-    SentenceEntry("The rocket flew to the moon.", OBJECTS, 2),
-    SentenceEntry("My backpack is very heavy.", OBJECTS, 2),
-    SentenceEntry("The clock says it is eight.", OBJECTS, 2),
-    SentenceEntry("Rain makes the grass grow.", NATURE, 2),
-    SentenceEntry("The mountain is very tall.", NATURE, 2),
-    SentenceEntry("Leaves fall from the tree.", NATURE, 2),
-    SentenceEntry("A rainbow has many colors.", NATURE, 2),
-    SentenceEntry("The frog sat on my hat!", FUNNY, 2),
-    SentenceEntry("My socks do not match.", FUNNY, 2),
-    SentenceEntry("A cow jumped over the moon.", FUNNY, 2),
-    # -- level 3: capitals, commas, questions ----------------------------
-    SentenceEntry("Where did the little dog go?", ANIMALS, 3),
-    SentenceEntry("The owl sleeps all day, then hunts at night.", ANIMALS, 3),
-    SentenceEntry("Dolphins are smart, playful animals.", ANIMALS, 3),
-    SentenceEntry("On Saturday, we visit the zoo.", FAMILY, 3),
-    SentenceEntry("Can you help me set the table?", FAMILY, 3),
-    SentenceEntry("What is your favorite dinner?", FOOD, 3),
-    SentenceEntry("I made a sandwich with jam and butter.", FOOD, 3),
-    SentenceEntry("First we stretch, then we run.", ACTIVITIES, 3),
-    SentenceEntry("Do you want to build a fort?", ACTIVITIES, 3),
-    SentenceEntry("The old blue truck needs new tires.", OBJECTS, 3),
-    SentenceEntry("In winter, the lake turns to ice.", NATURE, 3),
-    SentenceEntry("Why is the ocean so salty?", NATURE, 3),
-    SentenceEntry("My robot brushed its teeth with jelly!", FUNNY, 3),
-    SentenceEntry("The penguin wore a tiny red hat.", FUNNY, 3),
-    SentenceEntry("Never tickle a sleeping dragon.", FUNNY, 3),
-)
+from .general_knowledge import EVERYDAY_FACTS, NATURE_FACTS
+from .more_facts import FOOD_FACTS, FUNNY_FACTS
+BUILTIN_LIST = []
+for text in EVERYDAY_FACTS:
+    BUILTIN_LIST.append(SentenceEntry(text, EVERYDAY, 2))
+for text in NATURE_FACTS:
+    BUILTIN_LIST.append(SentenceEntry(text, NATURE, 2))
+for text in FOOD_FACTS:
+    BUILTIN_LIST.append(SentenceEntry(text, FOOD, 2))
+for text in FUNNY_FACTS:
+    BUILTIN_LIST.append(SentenceEntry(text, FUNNY, 2))
+BUILTIN: tuple[SentenceEntry, ...] = tuple(BUILTIN_LIST)
 
 #: Single words for Free Play, paired with an emoji reward.
 FREE_PLAY_WORDS: tuple[tuple[str, str], ...] = (
@@ -159,8 +104,6 @@ def _all_entries() -> list[SentenceEntry]:
 
 def by_category(category: str) -> list[SentenceEntry]:
     all_entries = _all_entries()
-    if category == EVERYDAY:
-        return [e for e in all_entries if e.category in _EVERYDAY_SOURCES]
     return [e for e in all_entries if e.category == category]
 
 
@@ -182,10 +125,7 @@ def random_entry(
     rng = rng or random
     pool = _all_entries()
     if category:
-        if category == EVERYDAY:
-            pool = [e for e in pool if e.category in _EVERYDAY_SOURCES]
-        else:
-            pool = [e for e in pool if e.category == category]
+        pool = [e for e in pool if e.category == category]
     if level:
         pool = [e for e in pool if e.level == level]
     if not pool:

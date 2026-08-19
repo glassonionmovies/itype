@@ -53,9 +53,9 @@ class FreeTypeEngine:
             return self._on_separator(trailing_comma=False)
         if char == ",":
             return self._on_separator(trailing_comma=True)
-        if char == ".": 
-            return self._on_period()
-        if char in ("", ""):
+        if char in (".", "!", "?"): 
+            return self._on_period(char)
+        if char in ("\x08", "\x7f", "\b"):
             return self._on_backspace()
         if char.isalpha() or char == "'":
             self.current_word += char
@@ -74,7 +74,7 @@ class FreeTypeEngine:
         self.current_word = ""
         return self._result(FreeEvent.WORD_CONFIRMED)
 
-    def _on_period(self) -> FreeTypeResult:
+    def _on_period(self, punct: str = ".") -> FreeTypeResult:
         word = self.current_word.strip()
         if word and _is_accepted(word):
             self.confirmed_words.append(word)
@@ -82,7 +82,7 @@ class FreeTypeEngine:
             self.current_word = ""
         if len(self.confirmed_words) < 2:
             return self._result(FreeEvent.IGNORED)
-        sentence = " ".join(self.sentence_parts) + "."
+        sentence = " ".join(self.sentence_parts) + punct
         finished_words = list(self.confirmed_words)
         finished_parts = list(self.sentence_parts)
         self.confirmed_words = []
