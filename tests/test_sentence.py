@@ -66,6 +66,8 @@ def test_every_builtin_sentence_is_fully_typeable():
 
 def test_every_category_has_sentences():
     for category in sentence_data.CATEGORIES:
+        if category == sentence_data.CUSTOM:
+            continue  # Custom Sentences come from the user database
         assert sentence_data.by_category(category), f"{category} is empty"
 
 

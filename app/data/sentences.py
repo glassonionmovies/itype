@@ -18,17 +18,31 @@ OBJECTS = "Objects"
 FUNNY = "Funny"
 NATURE = "Nature"
 
-CATEGORIES = (ANIMALS, FAMILY, FOOD, ACTIVITIES, OBJECTS, FUNNY, NATURE)
+# New merged / learning categories
+EVERYDAY = "Everyday"
+CUSTOM = "Custom Sentences"
+SCIENCE = "Science Learning"
+TECHNOLOGY = "Technology Learning"
+
+# Everyday merges: Animals, Objects, Family, Activities
+_EVERYDAY_SOURCES = {ANIMALS, OBJECTS, FAMILY, ACTIVITIES}
+
+CATEGORIES = (EVERYDAY, FOOD, FUNNY, NATURE, SCIENCE, TECHNOLOGY, CUSTOM)
 
 #: Category emoji, used as a visual anchor on the home screen.
 CATEGORY_ICONS = {
-    ANIMALS: "🐒",
-    FAMILY: "👨‍👩‍👧",
+    EVERYDAY: "🏠",
     FOOD: "🍕",
-    ACTIVITIES: "⚽",
-    OBJECTS: "🚗",
     FUNNY: "🤪",
     NATURE: "🌳",
+    SCIENCE: "🔬",
+    TECHNOLOGY: "💻",
+    CUSTOM: "✏️",
+    # Legacy (kept for backward compat if anything references them)
+    ANIMALS: "🐒",
+    FAMILY: "👨\u200d👩\u200d👧",
+    ACTIVITIES: "⚽",
+    OBJECTS: "🚗",
 }
 
 
@@ -129,16 +143,33 @@ FREE_PLAY_WORDS: tuple[tuple[str, str], ...] = (
 )
 
 
+def _all_entries() -> list[SentenceEntry]:
+    """All built-in entries including science and technology."""
+    from .science_sentences import SCIENCE_SENTENCES, TECHNOLOGY_SENTENCES
+
+    entries = list(BUILTIN)
+    entries.extend(
+        SentenceEntry(text, SCIENCE, 2) for text in SCIENCE_SENTENCES
+    )
+    entries.extend(
+        SentenceEntry(text, TECHNOLOGY, 2) for text in TECHNOLOGY_SENTENCES
+    )
+    return entries
+
+
 def by_category(category: str) -> list[SentenceEntry]:
-    return [entry for entry in BUILTIN if entry.category == category]
+    all_entries = _all_entries()
+    if category == EVERYDAY:
+        return [e for e in all_entries if e.category in _EVERYDAY_SOURCES]
+    return [e for e in all_entries if e.category == category]
 
 
 def by_level(level: int) -> list[SentenceEntry]:
-    return [entry for entry in BUILTIN if entry.level == level]
+    return [entry for entry in _all_entries() if entry.level == level]
 
 
 def all_texts() -> list[str]:
-    return [entry.text for entry in BUILTIN]
+    return [entry.text for entry in _all_entries()]
 
 
 def random_entry(
@@ -149,15 +180,18 @@ def random_entry(
 ) -> SentenceEntry:
     """Pick a sentence, avoiding an immediate repeat where possible."""
     rng = rng or random
-    pool = list(BUILTIN)
+    pool = _all_entries()
     if category:
-        pool = [entry for entry in pool if entry.category == category]
+        if category == EVERYDAY:
+            pool = [e for e in pool if e.category in _EVERYDAY_SOURCES]
+        else:
+            pool = [e for e in pool if e.category == category]
     if level:
-        pool = [entry for entry in pool if entry.level == level]
+        pool = [e for e in pool if e.level == level]
     if not pool:
-        pool = list(BUILTIN)
+        pool = _all_entries()
     if exclude and len(pool) > 1:
-        filtered = [entry for entry in pool if entry.text != exclude]
+        filtered = [e for e in pool if e.text != exclude]
         if filtered:
             pool = filtered
     return rng.choice(pool)

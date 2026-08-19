@@ -173,6 +173,8 @@ class FreeTypeView(QWidget):
         if result.event == FreeEvent.LETTER:
             self._refresh_display()
             self._reset_hint()
+            # Immediately acknowledge the letter
+            self.voice.say(char.upper(), priority=True)
 
         elif result.event == FreeEvent.BACKSPACE:
             self._refresh_display()

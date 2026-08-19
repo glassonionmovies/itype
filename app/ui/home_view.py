@@ -230,8 +230,13 @@ class HomeView(QWidget):
     def next_sentence(self) -> str:
         """Choose the next sentence, honouring category and level settings."""
         pool: list[str] = []
-        if self.settings.custom_only:
+
+        # Custom Sentences category: use only user-added sentences
+        if self.settings.category == sentence_data.CUSTOM or self.settings.custom_only:
             pool = self.database.custom_sentences()
+            if not pool:
+                pool = ["Add sentences in Grown-ups settings."]
+
         if not pool:
             custom = self.database.custom_sentences()
             entry = sentence_data.random_entry(
