@@ -1,6 +1,6 @@
-# PyInstaller spec for Typing Adventure.
+# PyInstaller spec for Type Scholar.
 #
-# Build with:  pyinstaller packaging/TypingAdventure.spec --noconfirm
+# Build with:  pyinstaller packaging/TypeScholar.spec --noconfirm
 # or just run: ./packaging/build_mac.sh
 
 import sys
@@ -57,7 +57,7 @@ exe = EXE(  # noqa: F821
     a.scripts,
     [],
     exclude_binaries=True,
-    name="Typing Adventure",
+    name="Type Scholar",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -79,20 +79,20 @@ coll = COLLECT(  # noqa: F821
     strip=False,
     upx=False,
     upx_exclude=[],
-    name="Typing Adventure",
+    name="Type Scholar",
 )
 
 if sys.platform == "darwin":
     app = BUNDLE(  # noqa: F821
         coll,
-        name="Typing Adventure.app",
+        name="Type Scholar.app",
         icon=str(ROOT / "packaging" / "icon.icns")
         if (ROOT / "packaging" / "icon.icns").exists()
         else None,
-        bundle_identifier="com.typingadventure.app",
+        bundle_identifier="com.typescholar.app",
         info_plist={
-            "CFBundleName": "Typing Adventure",
-            "CFBundleDisplayName": "Typing Adventure",
+            "CFBundleName": "Type Scholar",
+            "CFBundleDisplayName": "Type Scholar",
             "CFBundleShortVersionString": "1.0.0",
             "CFBundleVersion": "1.0.0",
             "NSHighResolutionCapable": True,
@@ -102,6 +102,6 @@ if sys.platform == "darwin":
             # The game reads key events from its own focused window, so it does
             # not need Input Monitoring. This string is here only in case a
             # future build enables global capture.
-            "NSAppleEventsUsageDescription": "Typing Adventure does not send Apple Events.",
+            "NSAppleEventsUsageDescription": "Type Scholar does not send Apple Events.",
         },
     )

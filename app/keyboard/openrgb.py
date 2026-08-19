@@ -33,7 +33,7 @@ HEADER = struct.Struct("<4sIII")
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 6742
-CLIENT_NAME = "Typing Adventure"
+CLIENT_NAME = "Type Scholar"
 
 #: Protocol revision we implement. The server replies with its own and we use
 #: the lower of the two, which is how OpenRGB negotiates compatibility.

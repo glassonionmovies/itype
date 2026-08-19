@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
         self.feedback_bundle = FeedbackBundle(settings)
         self.session_feedback = SessionFeedback(self.feedback_bundle)
 
-        self.setWindowTitle("Typing Adventure")
+        self.setWindowTitle("Type Scholar")
         self.resize(1120, 760)
         self.setMinimumSize(880, 620)
 

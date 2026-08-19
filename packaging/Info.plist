@@ -5,22 +5,22 @@
   Reference Info.plist for the packaged app.
 
   PyInstaller generates its own from the `info_plist` block in
-  TypingAdventure.spec; this file documents the same keys for anyone building
+  TypeScholar.spec; this file documents the same keys for anyone building
   the bundle another way (py2app, a hand-assembled .app, or an Xcode wrapper).
 -->
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Typing Adventure</string>
+    <string>Type Scholar</string>
 
     <key>CFBundleDisplayName</key>
-    <string>Typing Adventure</string>
+    <string>Type Scholar</string>
 
     <key>CFBundleIdentifier</key>
-    <string>com.typingadventure.app</string>
+    <string>com.typescholar.app</string>
 
     <key>CFBundleExecutable</key>
-    <string>Typing Adventure</string>
+    <string>Type Scholar</string>
 
     <key>CFBundlePackageType</key>
     <string>APPL</string>
@@ -53,6 +53,6 @@
       behind a usage-description prompt.
     -->
     <key>NSAppleEventsUsageDescription</key>
-    <string>Typing Adventure does not send Apple Events.</string>
+    <string>Type Scholar does not send Apple Events.</string>
 </dict>
 </plist>

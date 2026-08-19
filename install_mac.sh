@@ -7,7 +7,7 @@
 #   ./install_mac.sh --test-keyboard# set up and go straight to the hardware test
 #
 # Everything is local: a virtualenv in .venv, the app in /Applications, and
-# game data under ~/Library/Application Support/TypingAdventure.
+# game data under ~/Library/Application Support/TypeScholar.
 #
 set -euo pipefail
 
@@ -28,7 +28,7 @@ info() { printf '\033[36m==>\033[0m %s\n' "$1"; }
 warn() { printf '\033[33m[!]\033[0m %s\n' "$1"; }
 die()  { printf '\033[31m[x]\033[0m %s\n' "$1" >&2; exit 1; }
 
-printf '\n\033[1m  Typing Adventure — setup\033[0m\n\n'
+printf '\n\033[1m  Type Scholar — setup\033[0m\n\n'
 
 [[ "$(uname -s)" == "Darwin" ]] || die "This installer is for macOS. On Linux/Windows use: pip install -r requirements.txt"
 
@@ -89,7 +89,7 @@ case "$MODE" in
         ;;
     run)
         printf '\n'
-        info "Starting Typing Adventure from source"
+        info "Starting Type Scholar from source"
         exec python -m app.main
         ;;
 esac
@@ -99,10 +99,10 @@ esac
 info "Building the .app bundle"
 bash packaging/build_mac.sh || die "Build failed."
 
-APP="dist/Typing Adventure.app"
+APP="dist/Type Scholar.app"
 [[ -d "$APP" ]] || die "Build finished but $APP is missing."
 
-TARGET="/Applications/Typing Adventure.app"
+TARGET="/Applications/Type Scholar.app"
 if [[ -w /Applications ]]; then
     info "Installing to /Applications"
     rm -rf "$TARGET"
@@ -110,7 +110,7 @@ if [[ -w /Applications ]]; then
     INSTALLED="$TARGET"
 else
     mkdir -p "$HOME/Applications"
-    TARGET="$HOME/Applications/Typing Adventure.app"
+    TARGET="$HOME/Applications/Type Scholar.app"
     info "Installing to ~/Applications (no write access to /Applications)"
     rm -rf "$TARGET"
     cp -R "$APP" "$TARGET"

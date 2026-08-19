@@ -1,4 +1,4 @@
-# 🐵 Typing Adventure
+# 🐵 Type Scholar
 
 A typing and hand-eye coordination game for a child learning the keyboard.
 
@@ -29,7 +29,7 @@ git clone <this repo> && cd itype
 ```
 
 That sets up a virtualenv, installs dependencies, runs the tests, builds
-`Typing Adventure.app` and installs it. Other modes:
+`Type Scholar.app` and installs it. Other modes:
 
 ```bash
 ./install_mac.sh --run             # run from source, skip the build
@@ -198,7 +198,7 @@ need a keyboard attached.
 ### Building the app
 
 ```bash
-./packaging/build_mac.sh          # dist/Typing Adventure.app
+./packaging/build_mac.sh          # dist/Type Scholar.app
 ./packaging/build_mac.sh --dmg    # ...and a .dmg
 ```
 
@@ -215,7 +215,7 @@ Built for a child, so:
 - No analytics, no telemetry, no advertising
 - Speech uses the local macOS engine, never a cloud API
 - All data is a single SQLite file in
-  `~/Library/Application Support/TypingAdventure/`
+  `~/Library/Application Support/TypeScholar/`
 
 Deleting that folder removes everything the app has ever stored.
 

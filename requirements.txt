@@ -1,4 +1,4 @@
-# Runtime dependencies for Typing Adventure.
+# Runtime dependencies for Type Scholar.
 #
 # PySide6 is the only hard requirement. hidapi is what lets the game talk to
 # the Logitech PRO X 60's HID++ interface; without it the game still runs and

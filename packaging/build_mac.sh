@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build "Typing Adventure.app" (and optionally a .dmg) on macOS.
+# Build "Type Scholar.app" (and optionally a .dmg) on macOS.
 #
 #   ./packaging/build_mac.sh          # build the .app
 #   ./packaging/build_mac.sh --dmg    # build the .app and a .dmg
@@ -11,7 +11,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-APP_NAME="Typing Adventure"
+APP_NAME="Type Scholar"
 DIST="$ROOT/dist"
 APP_PATH="$DIST/$APP_NAME.app"
 
@@ -88,7 +88,7 @@ fi
 # -- build -----------------------------------------------------------------
 
 info "Building $APP_NAME.app"
-pyinstaller packaging/TypingAdventure.spec --noconfirm --distpath "$DIST" \
+pyinstaller packaging/TypeScholar.spec --noconfirm --distpath "$DIST" \
     --workpath "$ROOT/build"
 
 [[ -d "$APP_PATH" ]] || die "Build finished but $APP_PATH is missing."
@@ -106,7 +106,7 @@ info "Built $APP_PATH ($SIZE)"
 # -- smoke test ------------------------------------------------------------
 
 info "Verifying the bundle launches"
-if "$APP_PATH/Contents/MacOS/Typing Adventure" --version >/dev/null 2>&1; then
+if "$APP_PATH/Contents/MacOS/Type Scholar" --version >/dev/null 2>&1; then
     info "Bundle responds to --version"
 else
     warn "Could not run --version from the bundle; test it by hand."
@@ -115,15 +115,15 @@ fi
 # -- dmg -------------------------------------------------------------------
 
 if [[ $MAKE_DMG -eq 1 ]]; then
-    info "Building TypingAdventure.dmg"
+    info "Building TypeScholar.dmg"
     DMG_DIR="$(mktemp -d)"
     cp -R "$APP_PATH" "$DMG_DIR/"
     ln -s /Applications "$DMG_DIR/Applications"
-    rm -f "$DIST/TypingAdventure.dmg"
+    rm -f "$DIST/TypeScholar.dmg"
     hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_DIR" -ov -format UDZO \
-        "$DIST/TypingAdventure.dmg" >/dev/null
+        "$DIST/TypeScholar.dmg" >/dev/null
     rm -rf "$DMG_DIR"
-    info "Built $DIST/TypingAdventure.dmg"
+    info "Built $DIST/TypeScholar.dmg"
 fi
 
 cat <<EOF

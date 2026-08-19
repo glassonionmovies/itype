@@ -22,15 +22,15 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "==> Generating Windows icon" -ForegroundColor Cyan
 & $Python packaging\make_icon.py
 
-Write-Host "==> Building Typing Adventure" -ForegroundColor Cyan
-& ".\.venv-build-win\Scripts\pyinstaller.exe" packaging\TypingAdventure.spec --noconfirm --distpath "$Root\dist" --workpath "$Root\build"
+Write-Host "==> Building Type Scholar" -ForegroundColor Cyan
+& ".\.venv-build-win\Scripts\pyinstaller.exe" packaging\TypeScholar.spec --noconfirm --distpath "$Root\dist" --workpath "$Root\build"
 
 Write-Host "==> Creating Zip archive" -ForegroundColor Cyan
-if (Test-Path "$Root\dist\TypingAdventure-Windows.zip") {
-    Remove-Item "$Root\dist\TypingAdventure-Windows.zip" -Force
+if (Test-Path "$Root\dist\TypeScholar-Windows.zip") {
+    Remove-Item "$Root\dist\TypeScholar-Windows.zip" -Force
 }
-Compress-Archive -Path "$Root\dist\Typing Adventure" -DestinationPath "$Root\dist\TypingAdventure-Windows.zip"
+Compress-Archive -Path "$Root\dist\Type Scholar" -DestinationPath "$Root\dist\TypeScholar-Windows.zip"
 
 Write-Host ""
 Write-Host "Done." -ForegroundColor Green
-Write-Host "  Zip: $Root\dist\TypingAdventure-Windows.zip"
+Write-Host "  Zip: $Root\dist\TypeScholar-Windows.zip"

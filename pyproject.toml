@@ -3,13 +3,13 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "typing-adventure"
+name = "type-scholar"
 version = "1.0.0"
 description = "A keyboard learning game for kids, with per-key lighting on Logitech keyboards."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Typing Adventure" }]
+authors = [{ name = "Type Scholar" }]
 keywords = ["typing", "kids", "education", "keyboard", "rgb", "logitech"]
 
 classifiers = [
@@ -29,10 +29,10 @@ dependencies = [
 dev = ["pytest>=7.4", "pyinstaller>=6.3"]
 
 [project.scripts]
-typing-adventure = "app.main:main"
+type-scholar = "app.main:main"
 
 [project.gui-scripts]
-typing-adventure-gui = "app.main:main"
+type-scholar-gui = "app.main:main"
 
 [tool.setuptools]
 packages = [

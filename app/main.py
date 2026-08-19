@@ -1,7 +1,7 @@
 """Application entry point.
 
 Start with ``python -m app.main`` during development, or launch the packaged
-``Typing Adventure.app`` on macOS.
+``Type Scholar.app`` on macOS.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ def configure_logging(verbose: bool = False) -> None:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="typing-adventure",
+        prog="type-scholar",
         description=f"{APP_NAME} - a keyboard learning game for kids.",
     )
     parser.add_argument("--version", action="version", version=__version__)
@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     app = QApplication(sys.argv[:1])
     app.setApplicationName(APP_NAME)
     app.setApplicationDisplayName(APP_NAME)
-    app.setOrganizationName("Typing Adventure")
+    app.setOrganizationName("Type Scholar")
     apply_theme(app)
 
     window = MainWindow(settings, database, lighting)

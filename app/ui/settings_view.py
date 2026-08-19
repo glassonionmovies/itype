@@ -401,7 +401,7 @@ class SettingsView(QWidget):
         )
         gh = (
             "<br><br><span style='color:#8C93AC'>If you use Logitech G HUB, "
-            "closing it while playing gives Typing Adventure full control of "
+            "closing it while playing gives Type Scholar full control of "
             "the lights.</span>"
         )
         self.hardware_label.setText(head + extra + gh)

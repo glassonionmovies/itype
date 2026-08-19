@@ -11,7 +11,7 @@ import os
 import sys
 from pathlib import Path
 
-APP_DIR_NAME = "TypingAdventure"
+APP_DIR_NAME = "TypeScholar"
 
 
 def user_data_dir() -> Path:
@@ -45,7 +45,7 @@ def sound_cache_dir() -> Path:
 
 
 def log_path() -> Path:
-    return user_data_dir() / "typing-adventure.log"
+    return user_data_dir() / "type-scholar.log"
 
 
 def bundled_assets_dir() -> Path:
