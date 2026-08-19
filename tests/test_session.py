@@ -140,7 +140,7 @@ def test_first_reminder_after_the_delay():
     session.begin()
     clock.advance(6.0)
     message = session.tick()
-    assert message == "M is waiting."
+    assert message in ("Next letter is M.", "Find M.", "Type M.", "M.")
     assert lighting.emphasis >= 1
 
 
@@ -170,7 +170,7 @@ def test_second_reminder_escalates_after_the_gap():
     clock.advance(6.0)
     session.tick()
     clock.advance(13.0)
-    assert session.tick() == "Find M."
+    assert session.tick() in ("Next letter is M.", "Find M.", "Type M.", "M.")
 
 
 def test_activity_resets_the_reminder_clock():

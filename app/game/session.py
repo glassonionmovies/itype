@@ -21,6 +21,17 @@ from .engine import GameEngine, PressResult
 from .scoring import SessionResult
 
 
+import random
+
+def _random_prompt(char: str) -> str:
+    return random.choice([
+        f"Next letter is {char}.",
+        f"Find {char}.",
+        f"Type {char}.",
+        f"{char}.",
+    ])
+
+
 @dataclass
 class AttentionSettings:
     """When to nudge a child who has stopped (handoff section 18)."""
@@ -138,17 +149,19 @@ class GameSession:
         if self.voice and self.profile.voice_every_key and result.next_char:
             just_typed = keymap.spoken_name_for_char(result.expected_char)
             next_spoken = keymap.spoken_name_for_char(result.next_char)
+                
+            prompt = _random_prompt(next_spoken)
+            
             # Detect word boundary: the character just typed was a space
             if result.expected_char == " ":
                 # We finished a space — the next word is starting
                 next_word = self._word_at(result.index)
                 self.voice.say(
-                    f"Word complete. The next word is {next_word}. "
-                    f"Type the letter {next_spoken}.",
+                    f"Word complete. The next word is {next_word}. {prompt}",
                     priority=True,
                 )
             else:
-                self.voice.say(just_typed, priority=True)
+                self.voice.say(f"{just_typed}. {prompt}", priority=True)
 
     def _on_mistake(self, result: PressResult) -> None:
         if self.sounds:
@@ -182,13 +195,13 @@ class GameSession:
         spoken = keymap.spoken_name_for_char(expected)
 
         if self._reminders_given == 0 and idle >= self.attention.first_delay:
-            message = f"{spoken} is waiting."
+            message = _random_prompt(spoken)
         elif (
             self._reminders_given >= 1
             and idle >= self.attention.second_delay
             and since_reminder >= self.attention.repeat_gap
         ):
-            message = f"Find {spoken}."
+            message = _random_prompt(spoken)
         else:
             return None
 
