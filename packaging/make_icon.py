@@ -22,54 +22,30 @@ SIZES = [16, 32, 128, 256, 512]
 
 
 def draw(size: int) -> "QImage":  # type: ignore[name-defined]
-    from PySide6.QtCore import QRectF, Qt
-    from PySide6.QtGui import (
-        QBrush,
-        QColor,
-        QFont,
-        QImage,
-        QLinearGradient,
-        QPainter,
-        QPen,
-    )
-
+    from PySide6.QtCore import Qt, QRectF
+    from PySide6.QtGui import QImage, QPainter, QPainterPath, QBrush
+    
+    base_path = HERE.parent / "app" / "assets" / "images" / "icon_base.png"
+    base = QImage(str(base_path))
+    scaled = base.scaled(size, size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+    
+    # We want a transparent background with rounded corners, but our image is white.
+    # macOS icons usually manage their own masks or we can draw rounded corners on the white square.
     image = QImage(size, size, QImage.Format.Format_ARGB32)
     image.fill(Qt.GlobalColor.transparent)
-
+    
     painter = QPainter(image)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-    # Rounded background with the app's accent gradient.
+    painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+    
+    path = QPainterPath()
     radius = size * 0.22
-    rect = QRectF(size * 0.04, size * 0.04, size * 0.92, size * 0.92)
-    gradient = QLinearGradient(rect.topLeft(), rect.bottomRight())
-    gradient.setColorAt(0.0, QColor("#2A3350"))
-    gradient.setColorAt(1.0, QColor("#151824"))
-    painter.setBrush(QBrush(gradient))
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.drawRoundedRect(rect, radius, radius)
-
-    # A single lit keycap: the whole idea of the app in one shape.
-    cap = QRectF(size * 0.24, size * 0.22, size * 0.52, size * 0.52)
-    cap_gradient = QLinearGradient(cap.topLeft(), cap.bottomLeft())
-    cap_gradient.setColorAt(0.0, QColor("#6FBAFF"))
-    cap_gradient.setColorAt(1.0, QColor("#4FA8FF"))
-    painter.setBrush(QBrush(cap_gradient))
-    painter.setPen(QPen(QColor("#FFFFFF"), max(1.0, size * 0.012)))
-    painter.drawRoundedRect(cap, size * 0.1, size * 0.1)
-
-    font = QFont("Helvetica", int(size * 0.30))
-    font.setWeight(QFont.Weight.Black)
-    painter.setFont(font)
-    painter.setPen(QPen(QColor("#0C1220")))
-    painter.drawText(cap, Qt.AlignmentFlag.AlignCenter, "A")
-
-    # Underline echoing the in-game target cue.
-    painter.setPen(QPen(QColor("#4BE08C"), max(2.0, size * 0.045), Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-    y = size * 0.83
-    painter.drawLine(int(size * 0.30), int(y), int(size * 0.70), int(y))
-
+    path.addRoundedRect(QRectF(0, 0, size, size), radius, radius)
+    
+    painter.setClipPath(path)
+    painter.drawImage(0, 0, scaled)
     painter.end()
+    
     return image
 
 

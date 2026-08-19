@@ -70,7 +70,8 @@ def main(argv: list[str] | None = None) -> int:
     log.info("%s %s starting", APP_NAME, __version__)
 
     try:
-        from PySide6.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication, QSplashScreen
+        from PySide6.QtGui import QPixmap
     except ImportError:
         print(
             "PySide6 is not installed.\n"
@@ -80,6 +81,21 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     from app.ui.main_window import MainWindow, apply_theme
+    from app.paths import bundled_assets_dir
+
+    app = QApplication(sys.argv[:1])
+    app.setApplicationName(APP_NAME)
+    app.setApplicationDisplayName(APP_NAME)
+    app.setOrganizationName(APP_NAME)
+    apply_theme(app)
+
+    splash_path = str(bundled_assets_dir() / "images" / "splash.jpg")
+    splash_pixmap = QPixmap(splash_path)
+    # Scale it down slightly so it's not overwhelmingly large
+    splash_pixmap = splash_pixmap.scaledToWidth(800)
+    splash = QSplashScreen(splash_pixmap)
+    splash.show()
+    app.processEvents()
 
     settings = Settings.load()
     database = Database()
@@ -95,14 +111,16 @@ def main(argv: list[str] | None = None) -> int:
     for note in lighting.notes:
         log.info("lighting: %s", note)
 
-    app = QApplication(sys.argv[:1])
-    app.setApplicationName(APP_NAME)
-    app.setApplicationDisplayName(APP_NAME)
-    app.setOrganizationName("Type Scholar")
-    apply_theme(app)
+    # Make sure app icon is also set using the logo
+    from PySide6.QtGui import QIcon
+    icon_path = str(bundled_assets_dir() / "images" / "logo_horizontal.jpg")
+    app.setWindowIcon(QIcon(icon_path))
 
     window = MainWindow(settings, database, lighting)
+    
+    # Show main window and clear splash
     window.show()
+    splash.finish(window)
 
     # Ctrl-C in a terminal should still restore the keyboard.
     def _interrupt(_signum, _frame):
