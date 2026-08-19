@@ -15,3 +15,5 @@ venv/
 packaging/icon.iconset/
 packaging/icon.icns
 .venv-build/
+packaging/icon.ico
+.venv-build-win/
