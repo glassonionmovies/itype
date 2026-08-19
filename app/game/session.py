@@ -161,7 +161,7 @@ class GameSession:
                     priority=True,
                 )
             else:
-                self.voice.say(f"{just_typed}. {prompt}", priority=True)
+                self.voice.say(f"{just_typed}, {prompt}", priority=True)
 
     def _on_mistake(self, result: PressResult) -> None:
         if self.sounds:
