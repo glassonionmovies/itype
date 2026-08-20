@@ -149,6 +149,11 @@ class GameView(QWidget):
         characters = [c.display for c in self.session.engine.sentence.characters]
         self.strip.set_sentence(characters)
         self.strip.set_animate(self.settings.animations_enabled)
+        self.strip.set_display_settings(
+            self.settings.word_highlight_style,
+            self.settings.highlight_font_size,
+            self.settings.baseline_font_size
+        )
         self.keyboard.set_animate(self.settings.animations_enabled)
         self.hint.set_animate(self.settings.animations_enabled)
 

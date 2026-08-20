@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QScrollArea,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -200,6 +201,22 @@ class SettingsView(QWidget):
             )
         )
 
+        self.highlight_style_box = QComboBox()
+        for value, label in (("none", "None"), ("dock", "Dock Style"), ("separate", "Separate")):
+            self.highlight_style_box.addItem(label, value)
+        self.highlight_style_box.currentIndexChanged.connect(self._on_change)
+        layout.addWidget(_row("Word highlight style", self.highlight_style_box))
+
+        self.highlight_size_spin = QSpinBox()
+        self.highlight_size_spin.setRange(16, 90)
+        self.highlight_size_spin.valueChanged.connect(self._on_change)
+        layout.addWidget(_row("Highlight font size", self.highlight_size_spin))
+
+        self.baseline_size_spin = QSpinBox()
+        self.baseline_size_spin.setRange(16, 90)
+        self.baseline_size_spin.valueChanged.connect(self._on_change)
+        layout.addWidget(_row("Baseline font size", self.baseline_size_spin))
+
         # -- hardware ------------------------------------------------------
         layout.addWidget(_section("Keyboard lighting"))
         self.lighting_check = QCheckBox()
@@ -295,6 +312,10 @@ class SettingsView(QWidget):
         )
         self._select(self.animation_box, settings.animation)
         self.onscreen_check.setChecked(settings.show_onscreen_keyboard)
+        self._select(self.highlight_style_box, settings.word_highlight_style)
+        self.highlight_size_spin.setValue(settings.highlight_font_size)
+        self.baseline_size_spin.setValue(settings.baseline_font_size)
+        
         self.lighting_check.setChecked(settings.keyboard_lighting)
         self._select(self.highlight_box, settings.keyboard_highlight)
         
@@ -342,6 +363,10 @@ class SettingsView(QWidget):
 
         settings.animation = self.animation_box.currentData()
         settings.show_onscreen_keyboard = self.onscreen_check.isChecked()
+        settings.word_highlight_style = self.highlight_style_box.currentData()
+        settings.highlight_font_size = self.highlight_size_spin.value()
+        settings.baseline_font_size = self.baseline_size_spin.value()
+        
         settings.keyboard_lighting = self.lighting_check.isChecked()
         settings.keyboard_highlight = self.highlight_box.currentData()
         settings.custom_only = self.custom_only_check.isChecked()
