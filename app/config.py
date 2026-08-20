@@ -44,6 +44,7 @@ class Settings:
     word_highlight_style: str = "none"  # none | dock | separate
     highlight_font_size: int = 54
     baseline_font_size: int = 34
+    sentence_overflow: str = "wrap"  # wrap | scroll
     keyboard_highlight: str = "pulse"  # off | static | pulse | blink
     voice_rate: int = 170
     voice_name: str = ""

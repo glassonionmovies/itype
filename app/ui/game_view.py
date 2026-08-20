@@ -152,7 +152,8 @@ class GameView(QWidget):
         self.strip.set_display_settings(
             self.settings.word_highlight_style,
             self.settings.highlight_font_size,
-            self.settings.baseline_font_size
+            self.settings.baseline_font_size,
+            self.settings.sentence_overflow
         )
         self.keyboard.set_animate(self.settings.animations_enabled)
         self.hint.set_animate(self.settings.animations_enabled)

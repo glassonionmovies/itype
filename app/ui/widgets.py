@@ -56,6 +56,7 @@ class SentenceStrip(QWidget):
         self._highlight_style = "none"
         self._highlight_size = 54
         self._baseline_size = 34
+        self._overflow = "wrap"
         self.setMinimumHeight(140)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
@@ -63,10 +64,11 @@ class SentenceStrip(QWidget):
         self._timer.timeout.connect(self._advance)
         self._timer.start(33)
 
-    def set_display_settings(self, style: str, highlight_size: int, baseline_size: int) -> None:
+    def set_display_settings(self, style: str, highlight_size: int, baseline_size: int, overflow: str) -> None:
         self._highlight_style = style
         self._highlight_size = highlight_size
         self._baseline_size = baseline_size
+        self._overflow = overflow
         if style != "none":
             self.setMinimumHeight(240)
         else:
@@ -153,54 +155,133 @@ class SentenceStrip(QWidget):
         elif self._highlight_style == "dock":
             self._paint_dock(painter, current_idx, ws, we)
         else:
-            self._paint_none(painter)
+            self._paint_none(painter, current_idx)
             
-    def _paint_none(self, painter: QPainter) -> None:
+    def _paint_none(self, painter: QPainter, current_idx: int) -> None:
         base_font = theme.mono_font(self._font_size, QFont.Weight.DemiBold)
         metrics = QFontMetrics(base_font)
         cell = metrics.horizontalAdvance("W") + 4
-        total = cell * len(self._characters)
-        start_x = (self.width() - total) / 2
-        baseline = self.height() / 2 + metrics.capHeight() / 2
         wave = (math.sin(self._pulse * 2 * math.pi * 0.8) + 1) / 2
-
-        for index, char in enumerate(self._characters):
-            state = self._states[index] if index < len(self._states) else CharState.PENDING
-            x = start_x + index * cell
-            
-            if state is CharState.CURRENT:
-                self._draw_current(painter, char, x, baseline, cell, metrics, wave, self._font_size)
-            else:
-                font = theme.mono_font(self._font_size, QFont.Weight.DemiBold)
-                if state is CharState.CORRECT:
-                    color = QColor(theme.CHAR_CORRECT)
-                    color.setAlpha(215)
+        
+        words = self._group_words()
+        
+        if self._overflow == "wrap":
+            lines = self._wrap_lines(words, metrics, cell)
+            y = self._centered_y_for_lines(len(lines), metrics.height(), metrics.capHeight())
+            for line in lines:
+                tw = sum(len(w)*cell for w, _, _ in line)
+                x = (self.width() - tw) / 2
+                for w_chars, w_sts, _ in line:
+                    for i, c in enumerate(w_chars):
+                        st = w_sts[i]
+                        if st == CharState.CURRENT:
+                            self._draw_current(painter, c, x, y, cell, metrics, wave, self._font_size)
+                        else:
+                            color = QColor(theme.CHAR_CORRECT) if st == CharState.CORRECT else (QColor(theme.CHAR_PENDING))
+                            if st == CharState.CORRECT: color.setAlpha(215)
+                            painter.setFont(base_font)
+                            painter.setPen(QPen(color))
+                            painter.drawText(QPointF(x + (cell - metrics.horizontalAdvance(c)) / 2, y), c)
+                        x += cell
+                y += metrics.height() + 10
+        else:
+            total = cell * len(self._characters)
+            start_x = (self.width() - total) / 2
+            if total > self.width() - 60 and current_idx != -1:
+                start_x = (self.width() / 2) - (current_idx * cell)
+                
+            y = self.height() / 2 + metrics.capHeight() / 2
+            for index, char in enumerate(self._characters):
+                state = self._states[index] if index < len(self._states) else CharState.PENDING
+                x = start_x + index * cell
+                if state is CharState.CURRENT:
+                    self._draw_current(painter, char, x, y, cell, metrics, wave, self._font_size)
                 else:
-                    color = QColor(theme.CHAR_PENDING)
-                painter.setFont(font)
-                painter.setPen(QPen(color))
-                advance = metrics.horizontalAdvance(char)
-                painter.drawText(QPointF(x + (cell - advance) / 2, baseline), char)
+                    color = QColor(theme.CHAR_CORRECT) if state is CharState.CORRECT else QColor(theme.CHAR_PENDING)
+                    if state is CharState.CORRECT: color.setAlpha(215)
+                    painter.setFont(base_font)
+                    painter.setPen(QPen(color))
+                    painter.drawText(QPointF(x + (cell - metrics.horizontalAdvance(char)) / 2, y), char)
+
+    def _group_words(self):
+        words = []
+        cw, cw_st = [], []
+        for i, c in enumerate(self._characters):
+            st = self._states[i] if i < len(self._states) else CharState.PENDING
+            if c == ' ':
+                if cw: words.append((cw, cw_st, False))
+                cw, cw_st = [], []
+                words.append(([c], [st], True))
+            else:
+                cw.append(c)
+                cw_st.append(st)
+        if cw: words.append((cw, cw_st, False))
+        return words
+
+    def _wrap_lines(self, words, metrics, fixed_cell_w=None):
+        lines = []
+        current_line = []
+        current_w = 0
+        for w_chars, w_sts, is_space in words:
+            if fixed_cell_w:
+                ww = len(w_chars) * fixed_cell_w
+            else:
+                ww = sum(metrics.horizontalAdvance(c) for c in w_chars)
+            if current_w + ww > self.width() - 40 and current_line:
+                lines.append(current_line)
+                current_line = [(w_chars, w_sts, is_space)]
+                current_w = ww
+            else:
+                current_line.append((w_chars, w_sts, is_space))
+                current_w += ww
+        if current_line:
+            lines.append(current_line)
+        return lines
+
+    def _centered_y_for_lines(self, num_lines, line_height, cap_height):
+        total_h = num_lines * line_height + max(0, num_lines - 1) * 10
+        start_y = (self.height() - total_h) / 2
+        return start_y + cap_height
 
     def _paint_separate(self, painter: QPainter, current_idx: int, ws: int, we: int) -> None:
         f_base = theme.mono_font(self._baseline_size, QFont.Weight.DemiBold)
         m_base = QFontMetrics(f_base)
-        
-        # calculate total width for baseline
-        total_w = sum(m_base.horizontalAdvance(c) for c in self._characters)
-        x = (self.width() - total_w) / 2
-        baseline_y = self.height() / 3 + m_base.capHeight() / 2
         wave = (math.sin(self._pulse * 2 * math.pi * 0.8) + 1) / 2
         
-        painter.setFont(f_base)
-        for i, c in enumerate(self._characters):
-            st = self._states[i] if i < len(self._states) else CharState.PENDING
-            color = QColor(theme.CHAR_CORRECT) if st == CharState.CORRECT else (QColor(theme.CHAR_CURRENT) if st == CharState.CURRENT else QColor(theme.CHAR_PENDING))
-            if st == CharState.CORRECT: color.setAlpha(215)
-            painter.setPen(QPen(color))
-            painter.drawText(QPointF(x, baseline_y), c)
-            x += m_base.horizontalAdvance(c)
+        words = self._group_words()
+        lines = []
+        if self._overflow == "wrap":
+            lines = self._wrap_lines(words, m_base)
+        else:
+            lines = [words]
+
+        # Draw baseline sentence at top
+        y = self._centered_y_for_lines(len(lines), m_base.height(), m_base.capHeight())
+        if self._overflow == "wrap":
+            y = self.height() / 4 + m_base.capHeight() / 2 - (len(lines)-1)*m_base.height()/4
+        else:
+            y = self.height() / 3 + m_base.capHeight() / 2
             
+        for line in lines:
+            tw = sum(sum(m_base.horizontalAdvance(c) for c in w_chars) for w_chars, _, _ in line)
+            x = (self.width() - tw) / 2
+            if self._overflow == "scroll" and current_idx != -1 and tw > self.width() - 60:
+                # scroll so current_idx is centered
+                char_x = sum(m_base.horizontalAdvance(c) for c in self._characters[:current_idx])
+                x = (self.width() / 2) - char_x
+                
+            painter.setFont(f_base)
+            for w_chars, w_sts, _ in line:
+                for i, c in enumerate(w_chars):
+                    st = w_sts[i]
+                    color = QColor(theme.CHAR_CORRECT) if st == CharState.CORRECT else (QColor(theme.CHAR_CURRENT) if st == CharState.CURRENT else QColor(theme.CHAR_PENDING))
+                    if st == CharState.CORRECT: color.setAlpha(215)
+                    painter.setPen(QPen(color))
+                    painter.drawText(QPointF(x, y), c)
+                    x += m_base.horizontalAdvance(c)
+            y += m_base.height() + 10
+            
+        # Draw target word at bottom
         if current_idx != -1 and self._characters[current_idx] != ' ':
             f_high = theme.mono_font(self._highlight_size, QFont.Weight.Bold)
             m_high = QFontMetrics(f_high)
@@ -224,18 +305,7 @@ class SentenceStrip(QWidget):
                     hx += m_high.horizontalAdvance(c)
 
     def _paint_dock(self, painter: QPainter, current_idx: int, ws: int, we: int) -> None:
-        words = []
-        cw, cw_st = [], []
-        for i, c in enumerate(self._characters):
-            st = self._states[i] if i < len(self._states) else CharState.PENDING
-            if c == ' ':
-                if cw: words.append((cw, cw_st, False))
-                cw, cw_st = [], []
-                words.append(([c], [st], True))
-            else:
-                cw.append(c)
-                cw_st.append(st)
-        if cw: words.append((cw, cw_st, False))
+        words = self._group_words()
             
         current_word_idx = -1
         for i, (w_chars, w_sts, is_space) in enumerate(words):
@@ -243,7 +313,6 @@ class SentenceStrip(QWidget):
                 current_word_idx = i
                 break
                 
-        total_w = 0
         fonts = []
         for i, (w_chars, w_sts, is_space) in enumerate(words):
             if current_word_idx == -1:
@@ -254,29 +323,65 @@ class SentenceStrip(QWidget):
                 sz = self._baseline_size + (self._highlight_size - self._baseline_size) / (1.5 ** dist)
             f = theme.mono_font(int(sz), QFont.Weight.DemiBold)
             fonts.append(f)
-            m = QFontMetrics(f)
-            total_w += sum(m.horizontalAdvance(c) for c in w_chars)
-                
-        x = (self.width() - total_w) / 2
+            
+        lines = []
+        if self._overflow == "wrap":
+            current_line = []
+            current_w = 0
+            for i, (w_chars, w_sts, is_space) in enumerate(words):
+                m = QFontMetrics(fonts[i])
+                ww = sum(m.horizontalAdvance(c) for c in w_chars)
+                if current_w + ww > self.width() - 40 and current_line:
+                    lines.append(current_line)
+                    current_line = [(w_chars, w_sts, is_space, fonts[i])]
+                    current_w = ww
+                else:
+                    current_line.append((w_chars, w_sts, is_space, fonts[i]))
+                    current_w += ww
+            if current_line: lines.append(current_line)
+        else:
+            lines = [[(w_chars, w_sts, is_space, fonts[i]) for i, (w_chars, w_sts, is_space) in enumerate(words)]]
+            
         y = self.height() / 2
+        if self._overflow == "wrap":
+            # rough centering
+            total_h = len(lines) * QFontMetrics(fonts[0]).height() + max(0, len(lines)-1)*10
+            y = (self.height() - total_h)/2 + QFontMetrics(fonts[0]).capHeight()
+            
         wave = (math.sin(self._pulse * 2 * math.pi * 0.8) + 1) / 2
         
-        for i, (w_chars, w_sts, is_space) in enumerate(words):
-            f = fonts[i]
-            m = QFontMetrics(f)
-            cell_w = m.horizontalAdvance("W") + 4
-            for j, c in enumerate(w_chars):
-                st = w_sts[j]
-                if st == CharState.CURRENT:
-                    self._draw_current(painter, c, x - (cell_w - m.horizontalAdvance(c))/2, y + m.capHeight()/2, cell_w, m, wave, f.pointSize())
-                    x += m.horizontalAdvance(c)
-                else:
-                    color = QColor(theme.CHAR_CORRECT) if st == CharState.CORRECT else (QColor(theme.CHAR_CURRENT) if st == CharState.CURRENT else QColor(theme.CHAR_PENDING))
-                    if st == CharState.CORRECT: color.setAlpha(215)
-                    painter.setFont(f)
-                    painter.setPen(QPen(color))
-                    painter.drawText(QPointF(x, y + m.capHeight()/2), c)
-                    x += m.horizontalAdvance(c)
+        for line in lines:
+            tw = sum(sum(QFontMetrics(f).horizontalAdvance(c) for c in w_chars) for w_chars, _, _, f in line)
+            x = (self.width() - tw) / 2
+            
+            if self._overflow == "scroll" and current_idx != -1 and tw > self.width() - 60:
+                char_x = 0
+                for w_chars, w_sts, _, f in line:
+                    if CharState.CURRENT in w_sts:
+                        for i, c in enumerate(w_chars):
+                            if w_sts[i] == CharState.CURRENT: break
+                            char_x += QFontMetrics(f).horizontalAdvance(c)
+                        break
+                    char_x += sum(QFontMetrics(f).horizontalAdvance(c) for c in w_chars)
+                x = (self.width() / 2) - char_x
+
+            max_h = max(QFontMetrics(f).height() for _, _, _, f in line)
+            for w_chars, w_sts, _, f in line:
+                m = QFontMetrics(f)
+                cell_w = m.horizontalAdvance("W") + 4
+                for j, c in enumerate(w_chars):
+                    st = w_sts[j]
+                    if st == CharState.CURRENT:
+                        self._draw_current(painter, c, x - (cell_w - m.horizontalAdvance(c))/2, y, cell_w, m, wave, f.pointSize())
+                        x += m.horizontalAdvance(c)
+                    else:
+                        color = QColor(theme.CHAR_CORRECT) if st == CharState.CORRECT else (QColor(theme.CHAR_CURRENT) if st == CharState.CURRENT else QColor(theme.CHAR_PENDING))
+                        if st == CharState.CORRECT: color.setAlpha(215)
+                        painter.setFont(f)
+                        painter.setPen(QPen(color))
+                        painter.drawText(QPointF(x, y), c)
+                        x += m.horizontalAdvance(c)
+            y += max_h + 10
 
     def _draw_current(
         self,

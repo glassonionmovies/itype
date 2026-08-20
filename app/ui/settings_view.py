@@ -217,6 +217,12 @@ class SettingsView(QWidget):
         self.baseline_size_spin.valueChanged.connect(self._on_change)
         layout.addWidget(_row("Baseline font size", self.baseline_size_spin))
 
+        self.overflow_box = QComboBox()
+        for value, label in (("wrap", "Word Wrap"), ("scroll", "Scroll")):
+            self.overflow_box.addItem(label, value)
+        self.overflow_box.currentIndexChanged.connect(self._on_change)
+        layout.addWidget(_row("Sentence overflow", self.overflow_box))
+
         # -- hardware ------------------------------------------------------
         layout.addWidget(_section("Keyboard lighting"))
         self.lighting_check = QCheckBox()
@@ -315,6 +321,7 @@ class SettingsView(QWidget):
         self._select(self.highlight_style_box, settings.word_highlight_style)
         self.highlight_size_spin.setValue(settings.highlight_font_size)
         self.baseline_size_spin.setValue(settings.baseline_font_size)
+        self._select(self.overflow_box, settings.sentence_overflow)
         
         self.lighting_check.setChecked(settings.keyboard_lighting)
         self._select(self.highlight_box, settings.keyboard_highlight)
@@ -366,6 +373,7 @@ class SettingsView(QWidget):
         settings.word_highlight_style = self.highlight_style_box.currentData()
         settings.highlight_font_size = self.highlight_size_spin.value()
         settings.baseline_font_size = self.baseline_size_spin.value()
+        settings.sentence_overflow = self.overflow_box.currentData()
         
         settings.keyboard_lighting = self.lighting_check.isChecked()
         settings.keyboard_highlight = self.highlight_box.currentData()
